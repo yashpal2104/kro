@@ -32,8 +32,8 @@ func SynthesizeCRD(group, apiVersion, kind string, spec, status extv1.JSONSchema
 	if crdGroup == "" {
 		crdGroup = v1alpha1.KRODomainName
 	}
-	merged := newCRDAdditionalPrinterColumns(policy, additionalPrinterColumns)
-	return newCRD(crdGroup, apiVersion, kind, newCRDSchema(spec, status, statusFieldsOverride), merged)
+	printerColumns := newCRDAdditionalPrinterColumns(policy, additionalPrinterColumns)
+	return newCRD(crdGroup, apiVersion, kind, newCRDSchema(spec, status, statusFieldsOverride), printerColumns)
 }
 
 func newCRD(group, apiVersion, kind string, schema *extv1.JSONSchemaProps, additionalPrinterColumns []extv1.CustomResourceColumnDefinition) *extv1.CustomResourceDefinition {
@@ -106,40 +106,30 @@ func newCRDSchema(spec, status extv1.JSONSchemaProps, statusFieldsOverride bool)
 
 func newCRDAdditionalPrinterColumns(policy v1alpha1.AdditionalPrinterColumnPolicy, userCols []extv1.CustomResourceColumnDefinition) []extv1.CustomResourceColumnDefinition {
 	// Default behavior: Replace
-	if policy == "" || policy == v1alpha1.AdditionalPrinterColumnPolicyReplace {
-		if len(userCols) == 0 {
-			return defaultAdditionalPrinterColumns
-		}
+	
+	if len(userCols) == 0 {
+		return defaultAdditionalPrinterColumns
+	}
+	// Replace behavior: use user-provided columns as is.
+	if policy == v1alpha1.AdditionalPrinterColumnPolicyReplace {
 		return userCols
 	}
 
 	// Add behavior: merge defaults with user-provided columns.
-	keyOf := func(c extv1.CustomResourceColumnDefinition) string {
-		if c.Name != "" {
-			return "name:" + c.Name
-		}
-		if c.JSONPath != "" {
-			return "path:" + c.JSONPath
-		}
-		// fallback to a stable placeholder the pointer value
-		return fmt.Sprintf("idx:%p", &c)
-	}
+	printerColumns := make([]extv1.CustomResourceColumnDefinition, 0, len(defaultAdditionalPrinterColumns))
 
-	merged := make([]extv1.CustomResourceColumnDefinition, 0, len(defaultAdditionalPrinterColumns))
 	index := map[string]int{}
-	for i, d := range defaultAdditionalPrinterColumns {
-		merged = append(merged, d)
-		index[keyOf(d)] = i
+	for i, columns := range defaultAdditionalPrinterColumns {
+		printerColumns = append(printerColumns, columns)
+		index[columns.Name] = i
 	}
 
 	for _, u := range userCols {
-		k := keyOf(u)
-		if pos, ok := index[k]; ok {
-			merged[pos] = u
+		if pos, ok := index[u.Name]; ok {
+			printerColumns[pos] = u
 		} else {
-			index[k] = len(merged)
-			merged = append(merged, u)
+			printerColumns = append(printerColumns, u)
 		}
 	}
-	return merged
+	return printerColumns
 }

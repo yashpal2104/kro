@@ -91,13 +91,12 @@ type Schema struct {
 	// resourcegraphdefinition.
 	Validation []Validation `json:"validation,omitempty"`
 	// AdditionalPrinterColumnPolicy defines additional printer columns
-	// that will be passed down to the created CRD. The Default tag is "Replace", that only uses the provided columns, "Add:" tag Merge provided columns with defaults.
+	// that will be passed down to the created CRD. The default policy is "Replace".
 	//
 	// AdditionalPrinterColumnPolicy controls how provided additional printer
-	// columns are applied to the generated CRD.
+	// columns via AdditionalPrinterColumns are applied to the generated CRD.
 	//
-	// - "Replace": only use the provided columns; if none are provided, fall
-	//   back to the operator defaults (backwards compatible default).
+	// - "Replace": uses the provided columns as is; if no or empty AdditionalPrinterColumns are provided, fallback to the default columns.
 	// - "Add": merge the provided columns with the defaults, with user
 	//   definitions overriding defaults when they share a identifying key
 	//   (Name preferred, fallback to JSONPath).
