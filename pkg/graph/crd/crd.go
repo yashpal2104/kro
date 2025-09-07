@@ -37,6 +37,13 @@ func SynthesizeCRD(group, apiVersion, kind string, spec, status extv1.JSONSchema
 
 func newCRD(group, apiVersion, kind string, schema *extv1.JSONSchemaProps, additionalPrinterColumns []extv1.CustomResourceColumnDefinition) *extv1.CustomResourceDefinition {
 	pluralKind := flect.Pluralize(strings.ToLower(kind))
+
+	// Use defaults if no columns provided
+	printerColumns := additionalPrinterColumns
+	if len(printerColumns) == 0 {
+		printerColumns = defaultAdditionalPrinterColumns
+	}
+
 	return &extv1.CustomResourceDefinition{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:            fmt.Sprintf("%s.%s", pluralKind, group),
@@ -62,7 +69,7 @@ func newCRD(group, apiVersion, kind string, schema *extv1.JSONSchemaProps, addit
 					Subresources: &extv1.CustomResourceSubresources{
 						Status: &extv1.CustomResourceSubresourceStatus{},
 					},
-					AdditionalPrinterColumns: newCRDAdditionalPrinterColumns(additionalPrinterColumns),
+					AdditionalPrinterColumns: printerColumns,
 				},
 			},
 		},

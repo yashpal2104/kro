@@ -99,16 +99,16 @@ func TestSynthesizeCRD(t *testing.T) {
 
 func TestNewCRD(t *testing.T) {
 	tests := []struct {
-		name                   string
-		group                  string
-		apiVersion             string
-		kind                   string
-		printerColumns         []extv1.CustomResourceColumnDefinition
-		expectedName           string
-		expectedKind           string
-		expectedPlural         string
-		expectedSingular       string
-		expectedPrinterColumns []extv1.CustomResourceColumnDefinition
+		name                     string
+		group                    string
+		apiVersion               string
+		kind                     string
+		additionalPrinterColumns []extv1.CustomResourceColumnDefinition
+		expectedName             string
+		expectedKind             string
+		expectedPlural           string
+		expectedSingular         string
+		expectedPrinterColumns   []extv1.CustomResourceColumnDefinition
 	}{
 		{
 			name:                   "basic example",
@@ -144,23 +144,23 @@ func TestNewCRD(t *testing.T) {
 			expectedPrinterColumns: defaultAdditionalPrinterColumns,
 		},
 		{
-			name:                   "non nil empty printer columns",
-			group:                  "kro.com",
-			apiVersion:             "v2beta1",
-			kind:                   "WebHook",
-			printerColumns:         []extv1.CustomResourceColumnDefinition{},
-			expectedName:           "webhooks.kro.com",
-			expectedKind:           "WebHook",
-			expectedPlural:         "webhooks",
-			expectedSingular:       "webhook",
-			expectedPrinterColumns: defaultAdditionalPrinterColumns,
+			name:                     "non nil empty printer columns",
+			group:                    "kro.com",
+			apiVersion:               "v2beta1",
+			kind:                     "WebHook",
+			additionalPrinterColumns: []extv1.CustomResourceColumnDefinition{},
+			expectedName:             "webhooks.kro.com",
+			expectedKind:             "WebHook",
+			expectedPlural:           "webhooks",
+			expectedSingular:         "webhook",
+			expectedPrinterColumns:   defaultAdditionalPrinterColumns,
 		},
 		{
 			name:       "custom printer columns",
 			group:      "kro.com",
 			apiVersion: "v2beta1",
 			kind:       "WebHook",
-			printerColumns: []extv1.CustomResourceColumnDefinition{
+			additionalPrinterColumns: []extv1.CustomResourceColumnDefinition{
 				{
 					Name:     "Available replicas",
 					Type:     "integer",
@@ -194,7 +194,7 @@ func TestNewCRD(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			schema := &extv1.JSONSchemaProps{Type: "object"}
-			crd := newCRD(tt.group, tt.apiVersion, tt.kind, schema, tt.printerColumns)
+			crd := newCRD(tt.group, tt.apiVersion, tt.kind, schema, tt.additionalPrinterColumns)
 
 			assert.Equal(t, tt.expectedName, crd.Name)
 			assert.Equal(t, tt.group, crd.Spec.Group)

@@ -19,10 +19,15 @@ import (
 	runtime "k8s.io/apimachinery/pkg/runtime"
 )
 
+// AdditionalPrinterColumnPolicy defines the policy for handling additional printer columns
+type AdditionalPrinterColumnPolicy string
+
 const (
 	// DefaultServiceAccountKey is the key to use for the default service account
 	// in the serviceAccounts map.
-	DefaultServiceAccountKey = "*"
+	DefaultServiceAccountKey                                           = "*"
+	AdditionalPrinterColumnPolicyReplace AdditionalPrinterColumnPolicy = "Replace"
+	AdditionalPrinterColumnPolicyAdd     AdditionalPrinterColumnPolicy = "Add"
 )
 
 // ResourceGraphDefinitionSpec defines the desired state of ResourceGraphDefinition
