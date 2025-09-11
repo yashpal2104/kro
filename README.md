@@ -94,7 +94,7 @@ Please join our community meeting.
 
 ## Security
 
-See [CONTRIBUTING](CONTRIBUTING.md#security-issue-notifications) for more information.
+See [CONTRIBUTING](CONTRIBUTING.md#security) and [SECURITY](SECURITY.md) for information.
 
 ## License
 
