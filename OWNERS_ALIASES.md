@@ -1,0 +1,20 @@
+# See the OWNERS_ALIASES docs: https://git.k8s.io/community/contributors/guide/owners.md#owners_aliases
+
+aliases:
+  kro-maintainers:
+    - a-hilaly
+    - barney-s
+    - bridgetkromhout
+    - cheftako
+    - jlbutler
+    - matthchr
+    - nicslatts
+  kro-reviewers:
+    - jakobmoellerdev
+    - michaelhtm
+    - n3wscott
+  emeritus-karpenter-maintainers:
+    - eqe-aws
+    - rynowak
+
+# XXX TODO add sig leads to aliases
