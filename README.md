@@ -92,9 +92,13 @@ Please join our community meeting.
 [zoom]: https://us06web.zoom.us/j/85388697226?pwd=9Xxz1F0FcNUq8zFGrsRqkHMhFZTpuj.1
 [youtube]: https://www.youtube.com/channel/UCUlcI3NYq9ehl5wsdfbJzSA
 
+### Code of conduct
+
+Participation in the project community is governed by the [Kubernetes Code of Conduct](code-of-conduct.md).
+
 ## Security
 
-See [CONTRIBUTING](CONTRIBUTING.md#security-issue-notifications) for more information.
+See [CONTRIBUTING](CONTRIBUTING.md#security) and [SECURITY](SECURITY.md) for information.
 
 ## License
 
