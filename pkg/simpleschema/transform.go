@@ -275,6 +275,20 @@ func (tf *transformer) applyMarkers(schema *extv1.JSONSchemaProps, markers []*Ma
 				},
 			}
 			schema.XValidations = validation
+		case MarkerTypeImmutable:
+			isImmutable, err := strconv.ParseBool(marker.Value)
+			if err != nil {
+				return fmt.Errorf("failed to parse immutable marker value: %w", err)
+			}
+			if isImmutable {
+				immutableValidation := []extv1.ValidationRule{
+					{
+						Rule:    "self == oldSelf",
+						Message: "field is immutable",
+					},
+				}
+				schema.XValidations = append(schema.XValidations, immutableValidation...)
+			}
 		case MarkerTypeEnum:
 			var enumJSONValues []extv1.JSON
 
