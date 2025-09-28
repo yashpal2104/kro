@@ -154,7 +154,7 @@ func main() {
 		},
 		HealthProbeBindAddress:        probeAddr,
 		LeaderElection:                enableLeaderElection,
-		LeaderElectionID:              "kro-controller",
+		LeaderElectionID:              "controller.kro.run",
 		LeaderElectionNamespace:       leaderElectionNamespace,
 		LeaderElectionReleaseOnCancel: false,
 		Logger:                        rootLogger,
