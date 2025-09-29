@@ -186,7 +186,7 @@ func New(
 				FieldManager: config.FieldManager,
 				Force:        true,
 			},
-			//deleteOptions: metav1.DeleteOptions{},
+			// deleteOptions: metav1.DeleteOptions{},
 		},
 		log: config.Log,
 	}
@@ -354,7 +354,7 @@ func (a *applySet) Add(ctx context.Context, obj ApplyableObject) (*unstructured.
 		// Record the last read revision of the object.
 		obj.lastReadRevision = observed.GetResourceVersion()
 	}
-	a.log.V(2).Info("adding object to applyset", "object", obj.String(), "cluster-revision", obj.lastReadRevision)
+	a.log.V(1).Info("adding object to applyset", "object", obj.String(), "cluster-revision", obj.lastReadRevision)
 
 	if err := a.desired.Add(obj); err != nil {
 		return nil, err
@@ -466,7 +466,7 @@ func (a *applySet) updateParentLabelsAndAnnotations(
 		if _, err := a.parentClient.Apply(ctx, a.parent.GetName(), parentPatch, options); err != nil {
 			return nil, nil, fmt.Errorf("error updating parent %w", err)
 		}
-		a.log.V(2).Info("updated parent labels and annotations", "parent-name", a.parent.GetName(),
+		a.log.V(1).Info("updated parent labels and annotations", "parent-name", a.parent.GetName(),
 			"parent-namespace", a.parent.GetNamespace(),
 			"parent-gvk", a.parent.GroupVersionKind(),
 			"parent-labels", desiredLabels, "parent-annotations", desiredAnnotations)
@@ -552,7 +552,7 @@ func (a *applySet) apply(ctx context.Context, dryRun bool) (*ApplyResult, error)
 		}
 		lastApplied, err := dynResource.Apply(ctx, obj.GetName(), obj.Unstructured, options)
 		results.recordApplied(obj, lastApplied, err)
-		a.log.V(2).Info("applied object", "object", obj.String(), "applied-revision", lastApplied.GetResourceVersion(),
+		a.log.V(1).Info("applied object", "object", obj.String(), "applied-revision", lastApplied.GetResourceVersion(),
 			"error", err)
 	}
 
@@ -580,7 +580,7 @@ func (a *applySet) prune(ctx context.Context, results *ApplyResult, dryRun bool)
 			err = a.dynamicClient.Resource(mapping.Resource).Delete(ctx, name, options)
 		}
 		results.recordPruned(pruneObjects[i], err)
-		a.log.V(2).Info("pruned object", "object", pruneObjects[i].String(), "error", err)
+		a.log.V(1).Info("pruned object", "object", pruneObjects[i].String(), "error", err)
 	}
 
 	if !dryRun {

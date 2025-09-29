@@ -245,7 +245,7 @@ func (igr *instanceGraphReconciler) reconcileInstance(ctx context.Context) error
 
 	// If there are any cluster mutations, we need to requeue.
 	if result.HasClusterMutation() {
-		return igr.delayedRequeue(fmt.Errorf("changes applied to cluster"))
+		return requeue.Needed(fmt.Errorf("changes applied to cluster"))
 	}
 
 	return nil

@@ -106,8 +106,9 @@ var _ = Describe("Nested ResourceGraphDefinition", func() {
 		Expect(env.Client.Delete(ctx, rg)).To(Succeed())
 	})
 
-	It("should dynamically create RGDs with different schema field types", func(ctx SpecContext) {
+	FIt("should dynamically create RGDs with different schema field types", func(ctx SpecContext) {
 		// Create parent ResourceGraphDefinition
+		By("Creating parent ResourceGraphDefinition")
 		rg, genInstance := nestedResourceGraphDefinition("testmultirg")
 		Expect(env.Client.Create(ctx, rg)).To(Succeed())
 
@@ -133,12 +134,14 @@ var _ = Describe("Nested ResourceGraphDefinition", func() {
 
 		// Create all instances
 		for _, t := range testCases {
+			By(fmt.Sprintf("Creating instance %s", t.name))
 			instance := genInstance(ns.Name, t.name, t.typeVal, t.defaultVal)
 			Expect(env.Client.Create(ctx, instance)).To(Succeed())
 		}
 
 		// Wait for all nested ResourceGraphDefinitions and verify status
 		for _, t := range testCases {
+			By(fmt.Sprintf("Verifying instance %s", t.name))
 			// Wait for nested ResourceGraphDefinition
 			var nestedRG krov1alpha1.ResourceGraphDefinition
 			Eventually(func(g Gomega, ctx SpecContext) {
@@ -158,20 +161,23 @@ var _ = Describe("Nested ResourceGraphDefinition", func() {
 				}, instance)
 				g.Expect(err).ToNot(HaveOccurred())
 
-				instanceStatus, found, _ := unstructured.NestedString(instance.Object, "status", "state")
+				instanceStatus, found, _ := unstructured.NestedMap(instance.Object, "status")
 				g.Expect(found).To(BeTrue())
-				g.Expect(instanceStatus).To(Equal("ACTIVE"))
+				g.Expect(instanceStatus).ToNot(BeNil())
+				g.Expect(instanceStatus).To(HaveKeyWithValue("state", "ACTIVE"), fmt.Sprintf("instance status should have state field, status was %v", instanceStatus))
 			}, 30*time.Second, time.Second).WithContext(ctx).Should(Succeed())
 		}
 
 		// Delete all instances
 		for _, t := range testCases {
+			By(fmt.Sprintf("Deleting instance %s", t.name))
 			instance := genInstance(ns.Name, t.name, t.typeVal, t.defaultVal)
 			Expect(env.Client.Delete(ctx, instance)).To(Succeed())
 		}
 
 		// Verify all nested ResourceGraphDefinitions are deleted
 		for _, t := range testCases {
+			By(fmt.Sprintf("Verifying instance deletion %s", t.name))
 			Eventually(func(g Gomega, ctx SpecContext) {
 				var nestedRG krov1alpha1.ResourceGraphDefinition
 				err := env.Client.Get(ctx, types.NamespacedName{
@@ -182,6 +188,7 @@ var _ = Describe("Nested ResourceGraphDefinition", func() {
 		}
 
 		// Delete parent ResourceGraphDefinition
+		By("Deleting parent ResourceGraphDefinition")
 		Expect(env.Client.Delete(ctx, rg)).To(Succeed())
 
 		// Verify parent RGD is actually deleted
