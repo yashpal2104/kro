@@ -106,7 +106,7 @@ var _ = Describe("Nested ResourceGraphDefinition", func() {
 		Expect(env.Client.Delete(ctx, rg)).To(Succeed())
 	})
 
-	FIt("should dynamically create RGDs with different schema field types", func(ctx SpecContext) {
+	It("should dynamically create RGDs with different schema field types", func(ctx SpecContext) {
 		// Create parent ResourceGraphDefinition
 		By("Creating parent ResourceGraphDefinition")
 		rg, genInstance := nestedResourceGraphDefinition("testmultirg")
