@@ -15,7 +15,6 @@
 package core_test
 
 import (
-	"context"
 	"fmt"
 	"time"
 
@@ -34,8 +33,7 @@ import (
 )
 
 var _ = Describe("Update", func() {
-	It("should handle updates to instance resources correctly", func() {
-		ctx := context.Background()
+	It("should handle updates to instance resources correctly", func(ctx SpecContext) {
 		namespace := fmt.Sprintf("test-%s", rand.String(5))
 
 		// Create namespace
@@ -104,7 +102,7 @@ var _ = Describe("Update", func() {
 			}, createdRGD)
 			g.Expect(err).ToNot(HaveOccurred())
 			g.Expect(createdRGD.Status.State).To(Equal(krov1alpha1.ResourceGraphDefinitionStateActive))
-		}, 10*time.Second, time.Second).Should(Succeed())
+		}, 10*time.Second, time.Second).WithContext(ctx).Should(Succeed())
 
 		// Create initial instance
 		instance := &unstructured.Unstructured{
@@ -135,7 +133,7 @@ var _ = Describe("Update", func() {
 			g.Expect(*deployment.Spec.Replicas).To(Equal(int32(1)))
 			g.Expect(deployment.Spec.Template.Spec.Containers[0].Image).To(Equal("nginx:1.19"))
 			g.Expect(deployment.Spec.Template.Spec.Containers[0].Ports[0].ContainerPort).To(Equal(int32(80)))
-		}, 20*time.Second, time.Second).Should(Succeed())
+		}, 20*time.Second, time.Second).WithContext(ctx).Should(Succeed())
 
 		// Mark deployment as ready
 		deployment.Status.Replicas = 1
@@ -144,7 +142,7 @@ var _ = Describe("Update", func() {
 		Expect(env.Client.Status().Update(ctx, deployment)).To(Succeed())
 
 		// Update instance with new values
-		Eventually(func(g Gomega) {
+		Eventually(func(g Gomega, ctx SpecContext) {
 			err := env.Client.Get(ctx, types.NamespacedName{
 				Name:      "test-instance-for-updates",
 				Namespace: namespace,
@@ -158,10 +156,10 @@ var _ = Describe("Update", func() {
 			}
 			err = env.Client.Update(ctx, instance)
 			g.Expect(err).ToNot(HaveOccurred())
-		}, 10*time.Second, time.Second).Should(Succeed())
+		}, 10*time.Second, time.Second).WithContext(ctx).Should(Succeed())
 
 		// Verify deployment is updated with new values
-		Eventually(func(g Gomega) {
+		Eventually(func(g Gomega, ctx SpecContext) {
 			err := env.Client.Get(ctx, types.NamespacedName{
 				Name:      "deployment-test-instance-for-updates",
 				Namespace: namespace,
@@ -170,17 +168,17 @@ var _ = Describe("Update", func() {
 			g.Expect(*deployment.Spec.Replicas).To(Equal(int32(3)))
 			g.Expect(deployment.Spec.Template.Spec.Containers[0].Image).To(Equal("nginx:1.20"))
 			g.Expect(deployment.Spec.Template.Spec.Containers[0].Ports[0].ContainerPort).To(Equal(int32(443)))
-		}, 20*time.Second, time.Second).Should(Succeed())
+		}, 20*time.Second, time.Second).WithContext(ctx).Should(Succeed())
 
 		// Cleanup
 		Expect(env.Client.Delete(ctx, instance)).To(Succeed())
-		Eventually(func() bool {
+		Eventually(func(g Gomega, ctx SpecContext) {
 			err := env.Client.Get(ctx, types.NamespacedName{
 				Name:      "deployment-test-instance-for-updates",
 				Namespace: namespace,
 			}, deployment)
-			return errors.IsNotFound(err)
-		}, 20*time.Second, time.Second).Should(BeTrue())
+			g.Expect(err).To(MatchError(errors.IsNotFound, "deployment should be deleted"))
+		}, 20*time.Second, time.Second).WithContext(ctx).Should(Succeed())
 
 		Expect(env.Client.Delete(ctx, rgd)).To(Succeed())
 		Expect(env.Client.Delete(ctx, ns)).To(Succeed())

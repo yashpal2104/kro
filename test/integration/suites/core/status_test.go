@@ -15,7 +15,6 @@
 package core_test
 
 import (
-	"context"
 	"fmt"
 	"time"
 
@@ -33,12 +32,10 @@ import (
 
 var _ = Describe("Status", func() {
 	var (
-		ctx       context.Context
 		namespace string
 	)
 
-	BeforeEach(func() {
-		ctx = context.Background()
+	BeforeEach(func(ctx SpecContext) {
 		namespace = fmt.Sprintf("test-%s", rand.String(5))
 		// Create namespace
 		Expect(env.Client.Create(ctx, &corev1.Namespace{
@@ -48,7 +45,7 @@ var _ = Describe("Status", func() {
 		})).To(Succeed())
 	})
 
-	It("should have correct conditions when ResourceGraphDefinition is created", func() {
+	It("should have correct conditions when ResourceGraphDefinition is created", func(ctx SpecContext) {
 		rgd := generator.NewResourceGraphDefinition("test-status",
 			generator.WithSchema(
 				"TestStatus", "v1alpha1",
@@ -69,7 +66,7 @@ var _ = Describe("Status", func() {
 		Expect(env.Client.Create(ctx, rgd)).To(Succeed())
 
 		// Verify ResourceGraphDefinition status
-		Eventually(func(g Gomega) {
+		Eventually(func(g Gomega, ctx SpecContext) {
 			err := env.Client.Get(ctx, types.NamespacedName{
 				Name: rgd.Name,
 			}, rgd)
@@ -83,10 +80,10 @@ var _ = Describe("Status", func() {
 				g.Expect(cond.Status).To(Equal(metav1.ConditionTrue))
 			}
 
-		}, 10*time.Second, time.Second).Should(Succeed())
+		}, 10*time.Second, time.Second).WithContext(ctx).Should(Succeed())
 	})
 
-	It("should reflect failure conditions when definition is invalid", func() {
+	It("should reflect failure conditions when definition is invalid", func(ctx SpecContext) {
 		rgd := generator.NewResourceGraphDefinition("test-status-fail",
 			generator.WithSchema(
 				"TestStatusFail", "v1alpha1",
@@ -99,7 +96,8 @@ var _ = Describe("Status", func() {
 
 		Expect(env.Client.Create(ctx, rgd)).To(Succeed())
 
-		Eventually(func(g Gomega) {
+		//nolint:dupl // we have many test cases checking for inactivity but with different conditions
+		Eventually(func(g Gomega, ctx SpecContext) {
 			err := env.Client.Get(ctx, types.NamespacedName{
 				Name: rgd.Name,
 			}, rgd)
@@ -119,6 +117,6 @@ var _ = Describe("Status", func() {
 			g.Expect(crdCondition).ToNot(BeNil())
 			g.Expect(crdCondition.Status).To(Equal(metav1.ConditionFalse))
 			g.Expect(*crdCondition.Message).To(ContainSubstring("failed to build resourcegraphdefinition"))
-		}, 10*time.Second, time.Second).Should(Succeed())
+		}, 10*time.Second, time.Second).WithContext(ctx).Should(Succeed())
 	})
 })

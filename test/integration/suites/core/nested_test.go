@@ -55,7 +55,7 @@ var _ = Describe("Nested ResourceGraphDefinition", func() {
 		Expect(env.Client.Create(ctx, rg)).To(Succeed())
 
 		// Wait for parent ResourceGraphDefinition to be ready
-		Eventually(func(g Gomega) {
+		Eventually(func(g Gomega, ctx SpecContext) {
 			err := env.Client.Get(ctx, types.NamespacedName{
 				Name: rg.Name,
 			}, rg)
@@ -68,7 +68,7 @@ var _ = Describe("Nested ResourceGraphDefinition", func() {
 		Expect(env.Client.Create(ctx, instance)).To(Succeed())
 
 		// Expect instance status to eventually be Active
-		Eventually(func(g Gomega) {
+		Eventually(func(g Gomega, ctx SpecContext) {
 			err := env.Client.Get(ctx, types.NamespacedName{
 				Name:      instance.GetName(),
 				Namespace: ns.Name,
@@ -83,7 +83,7 @@ var _ = Describe("Nested ResourceGraphDefinition", func() {
 
 		// Wait for nested ResourceGraphDefinition to be created and ready
 		var nestedRG krov1alpha1.ResourceGraphDefinition
-		Eventually(func(g Gomega) {
+		Eventually(func(g Gomega, ctx SpecContext) {
 			err := env.Client.Get(ctx, types.NamespacedName{
 				Name: "rg-nested-string",
 			}, &nestedRG)
@@ -95,12 +95,12 @@ var _ = Describe("Nested ResourceGraphDefinition", func() {
 		Expect(env.Client.Delete(ctx, instance)).To(Succeed())
 
 		// Verify nested ResourceGraphDefinition is deleted
-		Eventually(func() bool {
+		Eventually(func(g Gomega, ctx SpecContext) {
 			err := env.Client.Get(ctx, types.NamespacedName{
 				Name: "rg-nested-string",
 			}, &nestedRG)
-			return errors.IsNotFound(err)
-		}, 30*time.Second, time.Second).WithContext(ctx).Should(BeTrue())
+			g.Expect(err).To(MatchError(errors.IsNotFound, "nested RGD should be deleted"))
+		}, 30*time.Second, time.Second).WithContext(ctx).Should(Succeed())
 
 		// Delete parent ResourceGraphDefinition
 		Expect(env.Client.Delete(ctx, rg)).To(Succeed())
@@ -112,7 +112,7 @@ var _ = Describe("Nested ResourceGraphDefinition", func() {
 		Expect(env.Client.Create(ctx, rg)).To(Succeed())
 
 		// Wait for parent ResourceGraphDefinition to be ready
-		Eventually(func(g Gomega) {
+		Eventually(func(g Gomega, ctx SpecContext) {
 			err := env.Client.Get(ctx, types.NamespacedName{
 				Name: rg.Name,
 			}, rg)
@@ -141,7 +141,7 @@ var _ = Describe("Nested ResourceGraphDefinition", func() {
 		for _, t := range testCases {
 			// Wait for nested ResourceGraphDefinition
 			var nestedRG krov1alpha1.ResourceGraphDefinition
-			Eventually(func(g Gomega) {
+			Eventually(func(g Gomega, ctx SpecContext) {
 				err := env.Client.Get(ctx, types.NamespacedName{
 					Name: fmt.Sprintf("rg-nested-%s", t.typeVal),
 				}, &nestedRG)
@@ -150,7 +150,7 @@ var _ = Describe("Nested ResourceGraphDefinition", func() {
 			}, 30*time.Second, time.Second).WithContext(ctx).Should(Succeed())
 
 			// Verify parent instance status
-			Eventually(func(g Gomega) {
+			Eventually(func(g Gomega, ctx SpecContext) {
 				instance := genInstance(ns.Name, t.name, t.typeVal, t.defaultVal)
 				err := env.Client.Get(ctx, types.NamespacedName{
 					Name:      t.name,
@@ -172,25 +172,25 @@ var _ = Describe("Nested ResourceGraphDefinition", func() {
 
 		// Verify all nested ResourceGraphDefinitions are deleted
 		for _, t := range testCases {
-			Eventually(func() bool {
+			Eventually(func(g Gomega, ctx SpecContext) {
 				var nestedRG krov1alpha1.ResourceGraphDefinition
 				err := env.Client.Get(ctx, types.NamespacedName{
 					Name: fmt.Sprintf("rg-nested-%s", t.typeVal),
 				}, &nestedRG)
-				return errors.IsNotFound(err)
-			}, 30*time.Second, time.Second).WithContext(ctx).Should(BeTrue())
+				g.Expect(err).To(MatchError(errors.IsNotFound, "nested RGD should be deleted"))
+			}, 30*time.Second, time.Second).WithContext(ctx).Should(Succeed())
 		}
 
 		// Delete parent ResourceGraphDefinition
 		Expect(env.Client.Delete(ctx, rg)).To(Succeed())
 
 		// Verify parent RGD is actually deleted
-		Eventually(func() bool {
+		Eventually(func(g Gomega, ctx SpecContext) {
 			err := env.Client.Get(ctx, types.NamespacedName{
 				Name: rg.Name,
 			}, &krov1alpha1.ResourceGraphDefinition{})
-			return errors.IsNotFound(err)
-		}, 30*time.Second, time.Second).WithContext(ctx).Should(BeTrue())
+			g.Expect(err).To(MatchError(errors.IsNotFound, "parent RGD should be deleted"))
+		}, 30*time.Second, time.Second).WithContext(ctx).Should(Succeed())
 	})
 })
 
