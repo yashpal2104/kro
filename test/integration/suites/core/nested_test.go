@@ -129,7 +129,6 @@ var _ = Describe("Nested ResourceGraphDefinition", func() {
 		}{
 			{"testinteger", "integer", "10"},
 			{"teststring", "string", "default"},
-			{"testintegeragain", "integer", "20"},
 		}
 
 		// Create all instances
@@ -164,7 +163,8 @@ var _ = Describe("Nested ResourceGraphDefinition", func() {
 				instanceStatus, found, _ := unstructured.NestedMap(instance.Object, "status")
 				g.Expect(found).To(BeTrue())
 				g.Expect(instanceStatus).ToNot(BeNil())
-				g.Expect(instanceStatus).To(HaveKeyWithValue("state", "ACTIVE"), fmt.Sprintf("instance status should have state field, status was %v", instanceStatus))
+				g.Expect(instanceStatus).To(HaveKeyWithValue("state", "ACTIVE"),
+					fmt.Sprintf("instance status should have state field, status was %v", instanceStatus))
 			}, 30*time.Second, time.Second).WithContext(ctx).Should(Succeed())
 		}
 

@@ -214,7 +214,7 @@ func (igr *instanceGraphReconciler) reconcileInstance(ctx context.Context) error
 			}
 		}
 	}
-
+	// Apply and prune resources
 	result, err := aset.Apply(ctx, prune)
 	for _, applied := range result.AppliedObjects {
 		resourceState := igr.state.ResourceStates[applied.ID]
@@ -245,7 +245,7 @@ func (igr *instanceGraphReconciler) reconcileInstance(ctx context.Context) error
 
 	// If there are any cluster mutations, we need to requeue.
 	if result.HasClusterMutation() {
-		return requeue.Needed(fmt.Errorf("changes applied to cluster"))
+		return igr.delayedRequeue(fmt.Errorf("changes applied to cluster"))
 	}
 
 	return nil
