@@ -69,6 +69,8 @@ var _ = Describe("Validation", func() {
 				g.Expect(err).ToNot(HaveOccurred())
 				g.Expect(rgd.Status.State).To(Equal(krov1alpha1.ResourceGraphDefinitionStateActive))
 			}, 10*time.Second, time.Second).WithContext(ctx).Should(Succeed())
+
+			Expect(env.Client.Delete(ctx, rgd)).To(Succeed())
 		})
 
 		It("should reject invalid resource IDs", func(ctx SpecContext) {
@@ -119,6 +121,8 @@ var _ = Describe("Validation", func() {
 					g.Expect(condition.Status).To(Equal(metav1.ConditionFalse))
 					g.Expect(*condition.Message).To(ContainSubstring("naming convention violation"))
 				}, 10*time.Second, time.Second).WithContext(ctx).Should(Succeed())
+
+				Expect(env.Client.Delete(ctx, rgd)).To(Succeed())
 			}
 		})
 
@@ -157,6 +161,8 @@ var _ = Describe("Validation", func() {
 				g.Expect(condition.Status).To(Equal(metav1.ConditionFalse))
 				g.Expect(*condition.Message).To(ContainSubstring("found duplicate resource IDs"))
 			}, 10*time.Second, time.Second).WithContext(ctx).Should(Succeed())
+
+			Expect(env.Client.Delete(ctx, rgd)).To(Succeed())
 		})
 	})
 
@@ -188,6 +194,8 @@ var _ = Describe("Validation", func() {
 				g.Expect(err).ToNot(HaveOccurred())
 				g.Expect(rgd.Status.State).To(Equal(krov1alpha1.ResourceGraphDefinitionStateActive))
 			}, 10*time.Second, time.Second).WithContext(ctx).Should(Succeed())
+
+			Expect(env.Client.Delete(ctx, rgd)).To(Succeed())
 		})
 
 		It("should reject invalid kubernetes object structures", func(ctx SpecContext) {
@@ -242,6 +250,8 @@ var _ = Describe("Validation", func() {
 					g.Expect(err).ToNot(HaveOccurred())
 					g.Expect(rgd.Status.State).To(Equal(krov1alpha1.ResourceGraphDefinitionStateInactive))
 				}, 10*time.Second, time.Second).WithContext(ctx).Should(Succeed())
+
+				Expect(env.Client.Delete(ctx, rgd)).To(Succeed())
 			}
 		})
 	})
@@ -275,6 +285,8 @@ var _ = Describe("Validation", func() {
 					g.Expect(err).ToNot(HaveOccurred())
 					g.Expect(rgd.Status.State).To(Equal(krov1alpha1.ResourceGraphDefinitionStateActive))
 				}, 10*time.Second, time.Second).WithContext(ctx).Should(Succeed())
+
+				Expect(env.Client.Delete(ctx, rgd)).To(Succeed())
 			}
 		})
 

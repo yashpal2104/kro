@@ -43,6 +43,9 @@ var _ = Describe("ExternalRef", func() {
 			},
 		}
 		Expect(env.Client.Create(ctx, ns)).To(Succeed())
+		DeferCleanup(func(ctx SpecContext) {
+			Expect(env.Client.Delete(ctx, ns)).To(Succeed())
+		})
 
 		// Create a Deployment that will be referenced
 		deployment1 := &appsv1.Deployment{
@@ -121,6 +124,9 @@ var _ = Describe("ExternalRef", func() {
 		)
 
 		Expect(env.Client.Create(ctx, rgd)).To(Succeed())
+		DeferCleanup(func(ctx SpecContext) {
+			Expect(env.Client.Delete(ctx, rgd)).To(Succeed())
+		})
 
 		// Verify ResourceGraphDefinition is created and becomes ready
 		createdRGD := &krov1alpha1.ResourceGraphDefinition{}
@@ -173,8 +179,6 @@ var _ = Describe("ExternalRef", func() {
 
 		// Cleanup
 		Expect(env.Client.Delete(ctx, instance)).To(Succeed())
-		Expect(env.Client.Delete(ctx, rgd)).To(Succeed())
 		Expect(env.Client.Delete(ctx, deployment1)).To(Succeed())
-		Expect(env.Client.Delete(ctx, ns)).To(Succeed())
 	})
 })

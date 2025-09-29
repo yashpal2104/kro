@@ -49,6 +49,14 @@ var _ = Describe("Readiness", func() {
 		Expect(env.Client.Create(ctx, ns)).To(Succeed())
 	})
 
+	AfterEach(func(ctx SpecContext) {
+		Expect(env.Client.Delete(ctx, &corev1.Namespace{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: namespace,
+			},
+		})).To(Succeed())
+	})
+
 	It(`should wait for deployment to have deployment.spec.replicas 
 		== deployment.status.availableReplicas before creating service`, func(ctx SpecContext) {
 		rgd := generator.NewResourceGraphDefinition("test-readiness",

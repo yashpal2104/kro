@@ -46,6 +46,14 @@ var _ = Describe("CRD", func() {
 		})).To(Succeed())
 	})
 
+	AfterEach(func(ctx SpecContext) {
+		Expect(env.Client.Delete(ctx, &corev1.Namespace{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: namespace,
+			},
+		})).To(Succeed())
+	})
+
 	Context("CRD Creation", func() {
 		It("should create CRD when ResourceGraphDefinition is created", func(ctx SpecContext) {
 			// Create a simple ResourceGraphDefinition
@@ -94,6 +102,8 @@ var _ = Describe("CRD", func() {
 				g.Expect(props["spec"].Properties["field2"].Type).To(Equal("integer"))
 				g.Expect(props["spec"].Properties["field2"].Default.Raw).To(Equal([]byte("42")))
 			}, 10*time.Second, time.Second).WithContext(ctx).Should(Succeed())
+
+			Expect(env.Client.Delete(ctx, rgd)).To(Succeed())
 		})
 
 		It("should update CRD when ResourceGraphDefinition is updated", func(ctx SpecContext) {
@@ -146,6 +156,8 @@ var _ = Describe("CRD", func() {
 				g.Expect(props["spec"].Properties).To(HaveLen(3))
 				g.Expect(props["spec"].Properties["field3"].Type).To(Equal("boolean"))
 			}, 10*time.Second, time.Second).WithContext(ctx).Should(Succeed())
+
+			Expect(env.Client.Delete(ctx, rgd)).To(Succeed())
 		})
 
 		It("should delete CRD when ResourceGraphDefinition is deleted", func(ctx SpecContext) {
@@ -250,6 +262,8 @@ var _ = Describe("CRD", func() {
 				g.Expect(schemaProps["field2"].Type).To(Equal("integer")) // Should be restored
 				g.Expect(schemaProps["field2"].Default.Raw).To(Equal([]byte("42")))
 			}, 20*time.Second, 2*time.Second).WithContext(ctx).Should(Succeed())
+
+			Expect(env.Client.Delete(ctx, rgd)).To(Succeed())
 		})
 	})
 })

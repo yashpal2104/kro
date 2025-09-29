@@ -45,6 +45,14 @@ var _ = Describe("Status", func() {
 		})).To(Succeed())
 	})
 
+	AfterEach(func(ctx SpecContext) {
+		Expect(env.Client.Delete(ctx, &corev1.Namespace{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: namespace,
+			},
+		})).To(Succeed())
+	})
+
 	It("should have correct conditions when ResourceGraphDefinition is created", func(ctx SpecContext) {
 		rgd := generator.NewResourceGraphDefinition("test-status",
 			generator.WithSchema(
@@ -64,6 +72,9 @@ var _ = Describe("Status", func() {
 		)
 
 		Expect(env.Client.Create(ctx, rgd)).To(Succeed())
+		DeferCleanup(func(ctx SpecContext) {
+			Expect(env.Client.Delete(ctx, rgd)).To(Succeed())
+		})
 
 		// Verify ResourceGraphDefinition status
 		Eventually(func(g Gomega, ctx SpecContext) {
@@ -95,6 +106,9 @@ var _ = Describe("Status", func() {
 		)
 
 		Expect(env.Client.Create(ctx, rgd)).To(Succeed())
+		DeferCleanup(func(ctx SpecContext) {
+			Expect(env.Client.Delete(ctx, rgd)).To(Succeed())
+		})
 
 		//nolint:dupl // we have many test cases checking for inactivity but with different conditions
 		Eventually(func(g Gomega, ctx SpecContext) {

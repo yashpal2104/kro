@@ -45,6 +45,14 @@ var _ = Describe("Topology", func() {
 		})).To(Succeed())
 	})
 
+	AfterEach(func(ctx SpecContext) {
+		Expect(env.Client.Delete(ctx, &corev1.Namespace{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: namespace,
+			},
+		})).To(Succeed())
+	})
+
 	It("should correctly order AWS resources in dependency graph", func(ctx SpecContext) {
 		rgd := generator.NewResourceGraphDefinition("test-topology",
 			generator.WithSchema(
@@ -203,6 +211,9 @@ var _ = Describe("Topology", func() {
 		)
 
 		Expect(env.Client.Create(ctx, rgd)).To(Succeed())
+		DeferCleanup(func(ctx SpecContext) {
+			Expect(env.Client.Delete(ctx, rgd)).To(Succeed())
+		})
 
 		Eventually(func(g Gomega, ctx SpecContext) {
 			err := env.Client.Get(ctx, types.NamespacedName{

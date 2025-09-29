@@ -50,6 +50,14 @@ var _ = Describe("Conditions", func() {
 		Expect(env.Client.Create(ctx, ns)).To(Succeed())
 	})
 
+	AfterEach(func(ctx SpecContext) {
+		Expect(env.Client.Delete(ctx, &corev1.Namespace{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: namespace,
+			},
+		})).To(Succeed())
+	})
+
 	It("should not create deployment, service, and configmap "+
 		"due to condition deploymentEnabled == false", func(ctx SpecContext) {
 		rgd := generator.NewResourceGraphDefinition("test-conditions",

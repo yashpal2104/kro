@@ -161,7 +161,7 @@ var _ = Describe("Nested ResourceGraphDefinition", func() {
 				instanceStatus, found, _ := unstructured.NestedString(instance.Object, "status", "state")
 				g.Expect(found).To(BeTrue())
 				g.Expect(instanceStatus).To(Equal("ACTIVE"))
-			}, 60*time.Second, time.Second).WithContext(ctx).Should(Succeed())
+			}, 30*time.Second, time.Second).WithContext(ctx).Should(Succeed())
 		}
 
 		// Delete all instances

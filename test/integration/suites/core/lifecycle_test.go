@@ -43,6 +43,9 @@ var _ = Describe("Update", func() {
 			},
 		}
 		Expect(env.Client.Create(ctx, ns)).To(Succeed())
+		DeferCleanup(func(ctx SpecContext) {
+			Expect(env.Client.Delete(ctx, ns)).To(Succeed())
+		})
 
 		// Create ResourceGraphDefinition for a simple deployment service
 		rgd := generator.NewResourceGraphDefinition("test-update",
@@ -93,6 +96,9 @@ var _ = Describe("Update", func() {
 		)
 
 		Expect(env.Client.Create(ctx, rgd)).To(Succeed())
+		DeferCleanup(func(ctx SpecContext) {
+			Expect(env.Client.Delete(ctx, rgd)).To(Succeed())
+		})
 
 		// Verify ResourceGraphDefinition is ready
 		createdRGD := &krov1alpha1.ResourceGraphDefinition{}
@@ -180,7 +186,5 @@ var _ = Describe("Update", func() {
 			g.Expect(err).To(MatchError(errors.IsNotFound, "deployment should be deleted"))
 		}, 20*time.Second, time.Second).WithContext(ctx).Should(Succeed())
 
-		Expect(env.Client.Delete(ctx, rgd)).To(Succeed())
-		Expect(env.Client.Delete(ctx, ns)).To(Succeed())
 	})
 })

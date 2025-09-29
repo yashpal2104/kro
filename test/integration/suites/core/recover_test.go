@@ -49,6 +49,14 @@ var _ = Describe("Recovery", func() {
 		Expect(env.Client.Create(ctx, ns)).To(Succeed())
 	})
 
+	AfterEach(func(ctx SpecContext) {
+		Expect(env.Client.Delete(ctx, &corev1.Namespace{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: namespace,
+			},
+		})).To(Succeed())
+	})
+
 	It("should recover from invalid state and use latest valid configuration", func(ctx SpecContext) {
 		// Create initial valid ResourceGraphDefinition
 		rgd := generator.NewResourceGraphDefinition("test-recovery",
