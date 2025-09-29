@@ -57,6 +57,7 @@ type Environment struct {
 type ControllerConfig struct {
 	AllowCRDDeletion bool
 	ReconcileConfig  ctrlinstance.ReconcileConfig
+	LogWriter        io.Writer
 }
 
 func New(ctx context.Context, controllerConfig ControllerConfig) (*Environment, error) {
@@ -64,8 +65,12 @@ func New(ctx context.Context, controllerConfig ControllerConfig) (*Environment, 
 		ControllerConfig: controllerConfig,
 	}
 
+	if env.ControllerConfig.LogWriter == nil {
+		env.ControllerConfig.LogWriter = io.Discard
+	}
+
 	// Setup logging
-	logf.SetLogger(zap.New(zap.WriteTo(io.Discard), zap.UseDevMode(true)))
+	logf.SetLogger(zap.New(zap.WriteTo(env.ControllerConfig.LogWriter), zap.UseDevMode(true)))
 	env.context, env.cancel = context.WithCancel(ctx)
 
 	env.TestEnv = &envtest.Environment{
