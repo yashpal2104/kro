@@ -214,7 +214,7 @@ func (igr *instanceGraphReconciler) reconcileInstance(ctx context.Context) error
 			}
 		}
 	}
-	// Apply and prune resources
+
 	result, err := aset.Apply(ctx, prune)
 	for _, applied := range result.AppliedObjects {
 		resourceState := igr.state.ResourceStates[applied.ID]

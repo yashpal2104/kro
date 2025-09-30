@@ -442,9 +442,10 @@ func (dc *DynamicController) enqueueObject(obj interface{}, eventType string) {
 
 // StartServingGVK registers a new GVK to the informers map safely.
 func (dc *DynamicController) StartServingGVK(ctx context.Context, gvr schema.GroupVersionResource, handler Handler) error {
+	dc.log.V(1).Info("Registering new GVK", "gvr", gvr)
+
 	_, exists := dc.informers.Load(gvr)
 	if exists {
-		dc.log.V(1).Info("Reusing existing GVR informer", "gvr", gvr)
 		// Even thought the informer is already registered, we should still
 		// update the handler, as it might have changed.
 		dc.handlers.Store(gvr, handler)
@@ -458,7 +459,7 @@ func (dc *DynamicController) StartServingGVK(ctx context.Context, gvr schema.Gro
 		}
 		return nil
 	}
-	dc.log.V(1).Info("Registering new GVR", "gvr", gvr)
+
 	// Create a new informer
 	gvkInformer := dynamicinformer.NewFilteredDynamicSharedInformerFactory(
 		dc.kubeClient,
