@@ -440,8 +440,8 @@ func (dc *DynamicController) enqueueObject(obj interface{}, eventType string) {
 	dc.queue.Add(objectIdentifiers)
 }
 
-// StartServingGVK registers a new GVK to the informers map safely.
-func (dc *DynamicController) StartServingGVK(ctx context.Context, gvr schema.GroupVersionResource, handler Handler) error {
+// Register registers a new GVK to the informers map safely.
+func (dc *DynamicController) Register(ctx context.Context, gvr schema.GroupVersionResource, handler Handler) error {
 	dc.log.V(1).Info("Registering new GVK", "gvr", gvr)
 
 	_, exists := dc.informers.Load(gvr)
@@ -519,14 +519,14 @@ func (dc *DynamicController) StartServingGVK(ctx context.Context, gvr schema.Gro
 	return nil
 }
 
-// UnregisterGVK safely removes a GVK from the controller and cleans up associated resources.
-func (dc *DynamicController) StopServiceGVK(ctx context.Context, gvr schema.GroupVersionResource) error {
+// Deregister safely removes a GVK from the controller and cleans up associated resources.
+func (dc *DynamicController) Deregister(ctx context.Context, gvr schema.GroupVersionResource) error {
 	dc.log.Info("Unregistering GVK", "gvr", gvr)
 
 	// Retrieve the informer
 	informerObj, ok := dc.informers.Load(gvr)
 	if !ok {
-		dc.log.V(1).Info("GVK not registered, nothing to unregister", "gvr", gvr)
+		dc.log.V(1).Info("GVK not registered, nothing to deregister", "gvr", gvr)
 		return nil
 	}
 
