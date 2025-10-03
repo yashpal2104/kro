@@ -17,7 +17,6 @@ package instance
 import (
 	"context"
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/go-logr/logr"
@@ -109,11 +108,9 @@ func NewController(
 
 // Reconcile is a handler function that reconciles the instance and its sub-resources.
 func (c *Controller) Reconcile(ctx context.Context, req ctrl.Request) error {
-	namespace, name := getNamespaceName(req)
+	log := c.log.WithValues("namespace", req.Namespace, "name", req.Name)
 
-	log := c.log.WithValues("namespace", namespace, "name", name)
-
-	instance, err := c.clientSet.Dynamic().Resource(c.gvr).Namespace(namespace).Get(ctx, name, metav1.GetOptions{})
+	instance, err := c.clientSet.Dynamic().Resource(c.gvr).Namespace(req.Namespace).Get(ctx, req.Name, metav1.GetOptions{})
 	if err != nil {
 		if apierrors.IsNotFound(err) {
 			log.Info("Instance not found, it may have been deleted")
@@ -151,15 +148,4 @@ func (c *Controller) Reconcile(ctx context.Context, req ctrl.Request) error {
 		state: newInstanceState(),
 	}
 	return instanceGraphReconciler.reconcile(ctx)
-}
-
-// getNamespaceName extracts the namespace and name from the request.
-func getNamespaceName(req ctrl.Request) (string, string) {
-	parts := strings.Split(req.Name, "/")
-	name := parts[len(parts)-1]
-	namespace := parts[0]
-	if namespace == "" {
-		namespace = metav1.NamespaceDefault
-	}
-	return namespace, name
 }
