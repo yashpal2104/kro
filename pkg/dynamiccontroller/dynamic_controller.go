@@ -59,6 +59,7 @@ package dynamiccontroller
 import (
 	"context"
 	"fmt"
+	"strings"
 	"sync"
 	"time"
 
@@ -333,7 +334,15 @@ func (dc *DynamicController) syncFunc(ctx context.Context, oi ObjectIdentifiers)
 	if !ok {
 		return fmt.Errorf("invalid handler type for GVR: %s", gvrKey)
 	}
-	err := handlerFunc(ctx, ctrl.Request{NamespacedName: types.NamespacedName{Name: oi.NamespacedKey}})
+
+	nn := types.NamespacedName{}
+	if parts := strings.Split(oi.NamespacedKey, "/"); len(parts) == 1 {
+		nn.Name = parts[0]
+	} else {
+		nn.Namespace = parts[0]
+		nn.Name = parts[1]
+	}
+	err := handlerFunc(ctx, ctrl.Request{NamespacedName: nn})
 	if err != nil {
 		handlerErrorsTotal.WithLabelValues(gvrKey).Inc()
 	}
