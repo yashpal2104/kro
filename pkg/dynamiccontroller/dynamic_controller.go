@@ -308,14 +308,14 @@ func (dc *DynamicController) processNextWorkItem(ctx context.Context) bool {
 // syncFunc reconciles a single item.
 func (dc *DynamicController) syncFunc(ctx context.Context, oi ObjectIdentifiers) error {
 	gvrKey := fmt.Sprintf("%s/%s/%s", oi.GVR.Group, oi.GVR.Version, oi.GVR.Resource)
-	dc.log.V(1).Info("Syncing resourcegraphdefinition instance request", "gvr", gvrKey, "namespacedKey", oi.NamespacedKey)
+	dc.log.V(1).Info("Syncing object", "gvr", gvrKey, "namespacedKey", oi.NamespacedKey)
 
 	startTime := time.Now()
 	defer func() {
 		duration := time.Since(startTime)
 		reconcileDuration.WithLabelValues(gvrKey).Observe(duration.Seconds())
 		reconcileTotal.WithLabelValues(gvrKey).Inc()
-		dc.log.V(1).Info("Finished syncing resourcegraphdefinition instance request",
+		dc.log.V(1).Info("Finished syncing object",
 			"gvr", gvrKey,
 			"namespacedKey", oi.NamespacedKey,
 			"duration", duration)
