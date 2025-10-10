@@ -24,9 +24,9 @@ const config: Config = {
 
   onBrokenLinks: "throw",
   markdown: {
-      hooks: {
-        onBrokenMarkdownLinks: "warn",
-      },
+    hooks: {
+      onBrokenMarkdownLinks: "warn",
+    },
   },
 
   // Even if you don't use internationalization, you can use this field to set
@@ -71,6 +71,9 @@ const config: Config = {
           // Please change this to your repo.
           // Remove this to remove the "edit this page" links.
           editUrl: "https://github.com/kubernetes-sigs/kro/tree/main/website",
+          disableVersioning: false,
+          includeCurrentVersion: true,
+          lastVersion: "0.4.1",
         },
         blog: false,
         theme: {
@@ -182,7 +185,8 @@ const config: Config = {
           ],
         },
       ],
-      copyright: "kro is a subproject of Kubernetes SIG Cloud Provider. Kubernetes is a CNCF graduated project."
+      copyright:
+        "kro is a subproject of Kubernetes SIG Cloud Provider. Kubernetes is a CNCF graduated project.",
     },
     /* announcementBar: {
       id: `beta announcement`,
