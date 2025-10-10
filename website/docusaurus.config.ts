@@ -64,7 +64,7 @@ const config: Config = {
           sidebarPath: "./sidebars.ts",
           versions: {
             current: {
-              label: "latest",
+              label: "main",
             },
           },
           // sidebarCollapsed: false,
