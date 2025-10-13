@@ -27,9 +27,8 @@ import (
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/util/yaml"
 	"k8s.io/apiserver/pkg/cel/openapi/resolver"
-	memory2 "k8s.io/client-go/discovery/cached/memory"
 	"k8s.io/client-go/rest"
-	"k8s.io/client-go/restmapper"
+	"sigs.k8s.io/controller-runtime/pkg/client/apiutil"
 
 	"github.com/kubernetes-sigs/kro/api/v1alpha1"
 	krocel "github.com/kubernetes-sigs/kro/pkg/cel"
@@ -49,9 +48,14 @@ import (
 func NewBuilder(
 	clientConfig *rest.Config, httpClient *http.Client,
 ) (*Builder, error) {
-	schemaResolver, dc, err := schemaresolver.NewCombinedResolver(clientConfig, httpClient)
+	schemaResolver, err := schemaresolver.NewCombinedResolver(clientConfig, httpClient)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create schema resolver: %w", err)
+	}
+
+	rm, err := apiutil.NewDynamicRESTMapper(clientConfig, httpClient)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create dynamic REST mapper: %w", err)
 	}
 
 	resourceEmulator := emulator.NewEmulator()
@@ -59,7 +63,7 @@ func NewBuilder(
 	rgBuilder := &Builder{
 		resourceEmulator: resourceEmulator,
 		schemaResolver:   schemaResolver,
-		restMapper:       restmapper.NewDeferredDiscoveryRESTMapper(memory2.NewMemCacheClient(dc)),
+		restMapper:       rm,
 	}
 	return rgBuilder, nil
 }
@@ -97,7 +101,7 @@ type Builder struct {
 	// Maybe there is a better way, if anything probably there is a better way to
 	// validate the CEL expressions. To revisit.
 	resourceEmulator *emulator.Emulator
-	restMapper       *restmapper.DeferredDiscoveryRESTMapper
+	restMapper       meta.RESTMapper
 }
 
 // NewResourceGraphDefinition creates a new ResourceGraphDefinition object from the given ResourceGraphDefinition
@@ -347,14 +351,13 @@ func (b *Builder) buildRGResource(
 
 	mapping, err := b.restMapper.RESTMapping(gvk.GroupKind(), gvk.Version)
 	if err != nil {
-		b.restMapper.Reset()
 		return nil, fmt.Errorf("failed to get REST mapping for resource %s: %w", rgResource.ID, err)
 	}
 
 	// Note that at this point we don't inject the dependencies into the resource.
 	return &Resource{
 		id:                     rgResource.ID,
-		gvr:                    metadata.GVKtoGVR(gvk),
+		gvr:                    mapping.Resource,
 		schema:                 resourceSchema,
 		emulatedObject:         emulatedResource,
 		originalObject:         &unstructured.Unstructured{Object: resourceObject},
@@ -381,9 +384,7 @@ func (b *Builder) buildRGResource(
 func (b *Builder) buildDependencyGraph(
 	resources map[string]*Resource,
 ) (
-	// directed acyclic graph
-	*dag.DirectedAcyclicGraph[string],
-	// map of runtime variables per resource
+	*dag.DirectedAcyclicGraph[string], // directed acyclic graph
 	error,
 ) {
 
