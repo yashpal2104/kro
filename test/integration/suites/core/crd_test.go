@@ -213,7 +213,7 @@ var _ = Describe("CRD", func() {
 			Eventually(func(g Gomega, ctx SpecContext) {
 				err := env.Client.Get(ctx, types.NamespacedName{Name: crdName}, crd)
 				g.Expect(err).ToNot(HaveOccurred())
-				g.Expect(metadata.IsKROOwned(crd.ObjectMeta)).To(BeTrue())
+				g.Expect(metadata.IsKROOwned(&crd.ObjectMeta)).To(BeTrue())
 				g.Expect(crd.Labels[metadata.ResourceGraphDefinitionNameLabel]).To(Equal("test-crd-owner-1"))
 			}, 10*time.Second, time.Second).WithContext(ctx).Should(Succeed())
 
@@ -271,7 +271,7 @@ var _ = Describe("CRD", func() {
 				}, crd)
 				g.Expect(err).ToNot(HaveOccurred())
 
-				g.Expect(metadata.IsKROOwned(crd.ObjectMeta)).To(BeTrue())
+				g.Expect(metadata.IsKROOwned(&crd.ObjectMeta)).To(BeTrue())
 				g.Expect(crd.Labels[metadata.ResourceGraphDefinitionNameLabel]).To(Equal(rgdName))
 
 				// store the original schema for later comparison
