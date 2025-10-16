@@ -20,8 +20,19 @@ if [[ -z ${IMAGE_TAG:-} ]]; then
 fi
 echo "Using IMAGE_TAG=${IMAGE_TAG}"
 
+if [[ -z ${HELM_IMAGE:-} ]]; then
+  echo "HELM_IMAGE is not set"
+  HELM_IMAGE=${IMAGE_PREFIX}charts
+fi
+echo "Using HELM_IMAGE=${HELM_IMAGE}"
+
 # build first, technically this is not needed as publish does a build too
 RELEASE_VERSION=${IMAGE_TAG} OCI_REPO=${IMAGE_PREFIX%/} make build-image
 
+# we are also pushing the helm chart, build it first
+RELEASE_VERSION=${IMAGE_TAG} HELM_IMAGE=${HELM_IMAGE} make package-helm
+
+
 # Do the actual publish
 RELEASE_VERSION=${IMAGE_TAG} OCI_REPO=${IMAGE_PREFIX%/} make publish-image
+RELEASE_VERSION=${IMAGE_TAG} HELM_IMAGE=${HELM_IMAGE} make publish-helm
