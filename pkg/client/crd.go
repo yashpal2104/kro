@@ -206,7 +206,7 @@ func (w *CRDWrapper) waitForReady(ctx context.Context, name string) error {
 // where multiple ResourceGraphDefinitions try to manage the same CRD, or where a
 // CRD created outside of KRO is accidentally overwritten.
 func (w *CRDWrapper) verifyOwnership(existingCRD *v1.CustomResourceDefinition, newCRD v1.CustomResourceDefinition) error {
-	if !metadata.IsKROOwned(existingCRD.ObjectMeta) {
+	if !metadata.IsKROOwned(&existingCRD.ObjectMeta) {
 		return fmt.Errorf("conflict detected: CRD %s already exists and is not owned by KRO", existingCRD.Name)
 	}
 
