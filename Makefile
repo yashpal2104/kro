@@ -214,9 +214,9 @@ publish-image: ko ## Publish the kro controller images to ghcr.io
 .PHONY: package-helm
 package-helm: ## Package Helm chart
 	cp ./config/crd/bases/* helm/crds/
-	@sed -i '' 's/tag: .*/tag: "$(RELEASE_VERSION)"/' helm/values.yaml
-	@sed -i '' 's/version: .*/version: $(RELEASE_VERSION)/' helm/Chart.yaml
-	@sed -i '' 's/appVersion: .*/appVersion: "$(RELEASE_VERSION)"/' helm/Chart.yaml
+	sed -i 's/tag: .*/tag: "$(RELEASE_VERSION)"/' helm/values.yaml
+	sed -i 's/version: .*/version: $(RELEASE_VERSION)/' helm/Chart.yaml
+	sed -i 's/appVersion: .*/appVersion: "$(RELEASE_VERSION)"/' helm/Chart.yaml
 	helm package helm
 
 .PHONY: publish-helm
