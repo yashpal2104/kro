@@ -1,6 +1,6 @@
-OCI_REPO ?= ghcr.io/kro-run/kro
+OCI_REPO ?= registry.k8s.io/kro
 
-HELM_IMAGE ?= ${OCI_REPO}
+HELM_IMAGE ?= ${OCI_REPO}/charts/kro
 KO_DOCKER_REPO ?= ${OCI_REPO}/kro
 
 HELM ?= go run helm.sh/helm/v3/cmd/helm@v3.19.0
@@ -208,7 +208,7 @@ build-image: ko ## Build the kro controller images using ko build
 		--push=false --tags ${RELEASE_VERSION} --sbom=none
 
 .PHONY: publish
-publish-image: ko ## Publish the kro controller images to ghcr.io
+publish-image: ko ## Publish the kro controller images
 	$(WITH_GOFLAGS) KOCACHE=$(KOCACHE) KO_DOCKER_REPO=$(KO_DOCKER_REPO) \
 		$(KO) publish --bare github.com/kubernetes-sigs/kro/cmd/controller \
 		--tags ${RELEASE_VERSION} --sbom=none
