@@ -198,83 +198,17 @@ Things to note:
 
 ##### Resource Graph Instance
 
-The Resource Graph Instance currently uses a single condition:
+This one is currently pretty tricky because it accepts conditions to be defined
+inside the RGD Instance. But at minimum and by default the controller adds:
 
 - InstanceSynced
 
-Based on analysis of the instance reconciler, the major sections of work can be
-broken down into the following sub-conditions that align with the reconciliation
-phases:
-
-```
-Ready
-├─ InstanceManaged - Instance finalizers and labels are properly set
-├─ GraphResolved - Runtime graph has been created and resources resolved
-└─ ResourcesReady - All resources in the graph are created and ready
-```
-
-The reconciler performs the following major work sections:
-
-1. **Instance Setup**: Setting managed state and finalizers (InstanceManaged)
-2. **Runtime Creation**: Creating the ResourceGraphDefinition runtime and resolving resources (GraphResolved)
-3. **Resource Reconciliation**: Processing each resource in topological order - creation, updates, and readiness checks (ResourcesReady)
-4. **Instance Deletion**: Deleting resources in reverse topological order
+To be able to use a condition manager, we would need a signal from the provided
+status shape to understand if the defined condition is a dependent condition or
+just informational.
 
 A similar example applies to Resource Graph Instance as shown under Resource
 Graph Definition.
-
-`Current Instance Status`
-
-```
-status:
-  state: ACTIVE
-  conditions:
-  - lastTransitionTime: "2025-08-07T21:31:02Z"
-    message: Instance reconciled successfully
-    reason: ReconciliationSucceeded
-    status: "True"
-    type: InstanceSynced
-```
-
-`Proposed Update`
-
-```
-status:
-  state: ACTIVE
-  conditions:
-  - lastTransitionTime: "2025-08-07T21:31:02Z"
-    message: ""
-    observedGeneration: 1
-    reason: "AllReady"
-    status: "True"
-    type: Ready
-  - lastTransitionTime: "2025-08-07T21:31:02Z"
-    message: Instance is properly managed with finalizers and labels
-    observedGeneration: 1
-    reason: "Managed"
-    status: "True"
-    type: InstanceManaged
-  - lastTransitionTime: "2025-08-07T21:31:02Z"
-    message: Runtime graph created and all resources resolved
-    observedGeneration: 1
-    reason: "Resolved"
-    status: "True"
-    type: GraphResolved
-  - lastTransitionTime: "2025-08-07T21:31:02Z"
-    message: All resources are created and ready
-    observedGeneration: 1
-    reason: "AllResourcesReady"
-    status: "True"
-    type: ResourcesReady
-```
-
-Things to note:
-
-- The messages have been customized to reflect the specific phase of reconciliation
-- ObservedGeneration is added and used in all conditions
-- The condition Types reflect the major work sections in the instance reconciler:
-  - InstanceSynced → InstanceManaged + GraphResolved + ResourcesReady structure
-- It is implied that Ready is controlled by a condition manager and never set directly
 
 ## Tasks
 
@@ -288,29 +222,23 @@ Things to note:
         reconciliation code rather than setting the entire condition block all
         together. Further letting the reconciler be testable and independent in
         of itself.
-- [x] [ResourceGraphDefinition] Delete the Condition struct from
+- [ ] [ResourceGraphDefinition] Delete the Condition struct from
       api/v1alpha1/conditions.go. We will use metav1’s Condition from upstream
       and accept the stricter schema validation that comes with it (also what
       the condition manager allows us to centralize).
-  - [x] This adds ObservedGeneration to Conditions explicitly.
+  - [ ] This adds ObservedGeneration to Conditions explicitly.
 - [x] [ResourceGraphDefinition] Watch and react to Resource Graph CRD changes,
       especially the “Accepted” status of a CRD.
-- [x] [Instance] Document the large chunks of work that the reconciler does,
-      each of these will get a sub-condition.
-  - [x] Identified three major phases: InstanceManaged, GraphResolved, ResourcesReady
-  - [x] Mapped reconciliation phases to specific sub-conditions
+- [ ] [Instance] Document the large chunks of work that the reconciler does,
+      each of these will get a sub-resource.
 - [ ] [Instance] Introduce a signal in the schema of provided conditions to
       determine if a condition should be considered for Readiness or it is just
       informational.
   - [ ] We might also need to support defining the polarity of success, which is
-        a really good reason to fork the condition managers, as they don't
+        a really good reason to fork the condition managers, as they don’t
         support this at the moment.
-- [x] [Instance] Introduce the Ready condition as a top-level condition for all
+- [ ] [Instance] Introduce the Ready condition as a top-level condition for all
       Instance schemas.
-- [x] [Instance] Replace InstanceSynced with Ready, managed by a condition manager.
-- [x] [Instance] Move the conditions logic into Mark* and Propagate* methods,
-      isolating API interaction logic from reconciliation logic.
-- [x] [Instance] Create instance condition manager similar to RGD implementation.
 
 There is likely more work that is not listed above but will require discovery.
 
@@ -322,6 +250,5 @@ There is likely more work that is not listed above but will require discovery.
 
 ## Discussion and notes
 
-- Scott Nichols Proposed this on March 24, 2025 via
+- Scott Nichols Proposed this on March 24, 2024 via
   [Google Doc](https://docs.google.com/document/d/1-Wc8m9LH6wq0URIPqzdpHc_MfQzHfScP5PSzzFCLaxw/edit?tab=t.0)
-- Updated Aug 7, 2025
