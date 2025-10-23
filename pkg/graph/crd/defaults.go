@@ -54,7 +54,7 @@ var (
 	// See https://kubernetes.io/docs/reference/using-api/api-concepts/#receiving-resources-as-tables for details.
 	// Sample output for `kubectl get clusters`
 	//
-	// NAME            STATE    READY    AGE
+	// NAME            STATE    SYNCED   AGE
 	// testcluster29   ACTIVE   True     22d
 	defaultAdditionalPrinterColumns = []extv1.CustomResourceColumnDefinition{
 		// ResourceGraphDefinition instance state
@@ -65,13 +65,13 @@ var (
 			Type:        "string",
 			JSONPath:    ".status.state",
 		},
-		// ResourceGraphDefinition instance Ready condition
+		// ResourceGraphDefinition instance AllResourcesReady condition
 		{
-			Name:        "Ready",
-			Description: "Whether a ResourceGraphDefinition instance is ready",
+			Name:        "Synced",
+			Description: "Whether a ResourceGraphDefinition instance have all it's subresources ready",
 			Priority:    0,
 			Type:        "string",
-			JSONPath:    ".status.conditions[?(@.type==\"Ready\")].status",
+			JSONPath:    ".status.conditions[?(@.type==\"InstanceSynced\")].status",
 		},
 		// ResourceGraphDefinition instance age
 		{
