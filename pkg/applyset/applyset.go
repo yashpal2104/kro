@@ -577,7 +577,11 @@ func (a *applySet) apply(ctx context.Context, dryRun bool) (*ApplyResult, error)
 			mu.Lock()
 			defer mu.Unlock()
 			results.recordApplied(obj, lastApplied, err)
-			a.log.V(2).Info("applied object", "object", obj.String(), "applied-revision", lastApplied.GetResourceVersion(),
+			var appliedRevision string
+			if lastApplied != nil {
+				appliedRevision = lastApplied.GetResourceVersion()
+			}
+			a.log.V(2).Info("applied object", "object", obj.String(), "applied-revision", appliedRevision,
 				"error", err)
 			return nil
 		})
