@@ -145,3 +145,41 @@ func TestLazyInformer_RecreateAfterStop(t *testing.T) {
 	}
 	assert.Len(t, li.handlers, 1)
 }
+
+func TestLazyInformer_ShutdownSafetyAndRestart(t *testing.T) {
+	scheme := runtime.NewScheme()
+	require.NoError(t, v1.AddMetaToScheme(scheme))
+	client := fake.NewSimpleMetadataClient(scheme)
+	gvr := schema.GroupVersionResource{Group: "safe", Version: "v1", Resource: "tests"}
+
+	ctx := t.Context()
+	logger := noopLogger()
+	li := NewLazyInformer(client, gvr, time.Second, nil, logger)
+
+	// shutdown before start should not panic
+	assert.NotPanics(t, li.Shutdown, "shutdown before any AddHandler must be safe")
+
+	// add handler to start informer
+	require.NoError(t, li.AddHandler(ctx, "h1", cache.ResourceEventHandlerFuncs{}))
+	assert.NotNil(t, li.Informer())
+	assert.Len(t, li.handlers, 1)
+	assert.NotNil(t, li.cancel)
+	assert.NotNil(t, li.done)
+
+	// shutdown while running
+	assert.NotPanics(t, li.Shutdown, "shutdown during run must not panic")
+	assert.Nil(t, li.Informer())
+	assert.Empty(t, li.handlers)
+	assert.Nil(t, li.cancel)
+	assert.Nil(t, li.done)
+
+	// repeated shutdowns are idempotent
+	assert.NotPanics(t, li.Shutdown, "shutdown should be idempotent")
+
+	// re-adding a handler after shutdown must recreate informer and context
+	require.NoError(t, li.AddHandler(ctx, "h2", cache.ResourceEventHandlerFuncs{}))
+	assert.NotNil(t, li.Informer(), "informer should be recreated after shutdown")
+	assert.Len(t, li.handlers, 1)
+	assert.NotNil(t, li.cancel)
+	assert.NotNil(t, li.done)
+}
