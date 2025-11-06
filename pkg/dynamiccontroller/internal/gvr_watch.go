@@ -166,7 +166,17 @@ func (w *LazyInformer) Informer() cache.SharedIndexInformer {
 func (w *LazyInformer) Shutdown() {
 	w.mu.Lock()
 	defer w.mu.Unlock()
-	w.cancel()
+
+	if w.cancel != nil {
+		w.cancel()
+		// ensure goroutine terminates before clearing
+		if w.done != nil {
+			<-w.done
+		}
+		w.cancel = nil
+		w.done = nil
+	}
+
 	w.informer = nil
 	w.handlers = make(map[string]cache.ResourceEventHandlerRegistration)
 }
