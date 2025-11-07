@@ -52,6 +52,24 @@ state, providing features like:
 - Consistent state management
 - Status tracking
 
+### Reactive Reconciliation
+
+kro automatically watches all resources managed by an instance and triggers
+reconciliation when any of them change. This means:
+
+- **Child Resource Changes**: When a managed resource (like a Deployment or Service) is
+  modified, kro detects the change and reconciles the instance to ensure it matches
+  the desired state defined in your ResourceGraphDefinition.
+
+- **Drift Detection**: If a resource is manually modified or deleted, kro will detect
+  the drift and automatically restore it to the desired state.
+
+- **Dependency Updates**: Changes to resources propagate through the dependency graph,
+  ensuring all dependent resources are updated accordingly.
+
+This reactive behavior ensures your instances maintain consistency without requiring
+manual intervention or periodic full reconciliations.
+
 ## Monitoring Your Instances
 
 KRO provides rich status information for every instance:
@@ -69,11 +87,30 @@ status:
   state: ACTIVE # High-level instance state
   availableReplicas: 3 # Status from Deployment
   conditions: # Detailed status conditions
-    - type: Ready
+    - lastTransitionTime: "2025-08-08T00:03:46Z"
+      message: instance is properly managed with finalizers and labels
+      observedGeneration: 1
+      reason: Managed
       status: "True"
-      lastTransitionTime: "2024-07-23T01:01:59Z"
-      reason: ResourcesAvailable
-      message: "All resources are available and configured correctly"
+      type: InstanceManaged
+    - lastTransitionTime: "2025-08-08T00:03:46Z"
+      message: runtime graph created and all resources resolved
+      observedGeneration: 1
+      reason: Resolved
+      status: "True"
+      type: GraphResolved
+    - lastTransitionTime: "2025-08-08T00:03:46Z"
+      message: all resources are created and ready
+      observedGeneration: 1
+      reason: AllResourcesReady
+      status: "True"
+      type: ResourcesReady
+    - lastTransitionTime: "2025-08-08T00:03:46Z"
+      message: ""
+      observedGeneration: 1
+      reason: Ready
+      status: "True"
+      type: Ready
 ```
 
 ### Understanding Status
@@ -88,16 +125,63 @@ Every instance includes:
    - `DELETING`: Indicates that the instance is in the process of being deleted.
    - `ERROR`: Indicates that an error occurred during instance processing.
 
-2. **Conditions**: Detailed status information
+2. **Conditions**: Detailed status information structured hierarchically
 
-   - `Ready`: Instance is fully operational
-   - `Progressing`: Changes are being applied
-   - `Degraded`: Operating but not optimal
-   - `Error`: Problems detected
+   kro provides a top-level `Ready` condition that reflects the overall instance health. This condition is supported by three sub-conditions that track different phases of the reconciliation process:
+
+   - `InstanceManaged`: Instance finalizers and labels are properly set
+     - Ensures the instance is under kro's management
+     - Tracks whether cleanup handlers (finalizers) are configured
+     - Confirms instance is labeled with ownership and version information
+
+   - `GraphResolved`: Runtime graph has been created and resources resolved
+     - Validates that the resource graph has been successfully parsed
+     - Confirms all resource templates have been resolved
+     - Ensures dependencies between resources are properly understood
+
+   - `ResourcesReady`: All resources in the graph are created and ready
+     - Tracks the creation and readiness of all managed resources
+     - Monitors the health of resources in topological order
+     - Reports when all resources have reached their ready state
+
+   - `Ready`: Instance is fully operational (top-level condition)
+     - Aggregates the state of all sub-conditions
+     - Only becomes True when all sub-conditions are True
+     - The primary condition to monitor for instance health
+
+   Each condition includes:
+   - `observedGeneration`: Tracks which generation of the instance this condition reflects
+   - `lastTransitionTime`: When the condition last changed state
+   - `reason`: A programmatic identifier for the condition state
+   - `message`: A human-readable description of the current state
 
 3. **Resource Status**: Status from your resources
    - Values you defined in your ResourceGraphDefinition's status section
    - Automatically updated as resources change
+
+## Debugging Instance Issues
+
+When an instance is not in the expected state, the condition hierarchy helps you quickly identify where the problem occurred:
+
+1. **Check the Ready condition first**
+   ```bash
+   kubectl get <your-kind> <instance-name> -o jsonpath='{.status.conditions[?(@.type=="Ready")]}'
+   ```
+
+2. **If Ready is False, check the sub-conditions** to identify which phase failed:
+
+   - If `InstanceManaged` is False: Check if there are issues with finalizers or instance labels
+   - If `GraphResolved` is False: The resource graph could not be created - check the ResourceGraphDefinition for syntax errors or invalid CEL expressions
+   - If `ResourcesReady` is False: One or more managed resources failed to become ready - check the error message for which resource failed
+
+3. **Use kubectl describe** to see all conditions and recent events:
+   ```bash
+   kubectl describe <your-kind> <instance-name>
+   ```
+
+4. **Check the observedGeneration** field in conditions:
+   - If `observedGeneration` is less than `metadata.generation`, the controller hasn't processed the latest changes yet
+   - If they match, the conditions reflect the current state of your instance
 
 ## Best Practices
 
@@ -111,7 +195,17 @@ Every instance includes:
 
 - **Active Monitoring**: Regularly check instance status beyond just "Running".
   Watch conditions, resource status, and events to catch potential issues early
-  and understand your application's health.
+  and understand your application's health. Focus on the `Ready` condition and
+  its sub-conditions to understand the reconciliation state.
+
+- **Monitor observedGeneration**: When making changes to an instance, verify that
+  `observedGeneration` in the conditions matches `metadata.generation` to ensure
+  kro has processed your changes.
+
+- **Leverage Reactive Reconciliation**: kro automatically detects and corrects drift
+  in managed resources. If you need to make manual changes to resources, update the
+  instance specification instead to ensure changes persist and align with your
+  desired state.
 
 - **Regular Reviews**: Periodically review your instance configurations to
   ensure they reflect current requirements and best practices. Update resource

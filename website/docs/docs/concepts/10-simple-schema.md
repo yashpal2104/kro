@@ -268,21 +268,69 @@ username: string | minLength=3 maxLength=20 pattern="^[a-zA-Z0-9_]+$"
 tags: "[]string" | uniqueItems=true minItems=1 maxItems=10 description="1-10 unique tags"
 ```
 
+:::warning Floating Point Precision
+When using `float` or `double` types in CEL expressions (particularly in `readyWhen` or `includeWhen` conditions), be aware of floating point precision issues that could cause unexpected behavior. Avoid comparing floating point values for equality in conditional logic. Prefer using `string`, `integer`, or `boolean` types whenever possible to avoid precision-related oscillations in resource state.
+:::
+
 ## Status Fields
 
 Status fields use CEL expressions to reference values from resources. kro
 automatically:
 
 - Infers the correct types from the expressions
-- Validates that referenced resources exist
+- Validates that referenced resources exist at ResourceGraphDefinition creation time
 - Updates values when the underlying resources change
+- Validates type compatibility using CEL's native type system
 
 ```yaml
 status:
   # Types are inferred from the referenced fields
-  availableReplicas: ${deployment.status.availableReplicas}
-  endpoint: ${service.status.loadBalancer.ingress[0].hostname}
+  availableReplicas: ${deployment.status.availableReplicas}  # integer
+  endpoint: ${service.status.loadBalancer.ingress[0].hostname}  # string
+  metadata: ${deployment.metadata}  # object
 ```
+
+### Single vs Multi-Expression Fields
+
+Status fields can contain either a single CEL expression or multiple expressions concatenated together:
+
+**Single Expression Fields** can be any type:
+```yaml
+status:
+  replicas: ${deployment.status.replicas}  # integer
+  metadata: ${deployment.metadata}  # object
+  name: ${deployment.metadata.name}  # string
+  ready: ${deployment.status.conditions.exists(c, c.type == 'Available')}  # boolean
+```
+
+**Multi-Expression Fields** (string templating) must contain only string expressions:
+```yaml
+status:
+  # ✓ Valid - all expressions return strings
+  endpoint: "https://${service.metadata.name}.${service.metadata.namespace}.svc.cluster.local"
+
+  # ✓ Valid - explicit string conversion
+  summary: "Replicas: ${string(deployment.status.replicas)}, Ready: ${string(deployment.status.ready)}"
+
+  # ✗ Invalid - concatenating non-string types
+  invalid: "${deployment.status.replicas}-${deployment.metadata}"  # Will fail validation
+```
+
+Multi-expression fields are useful for string templating scenarios like constructing URLs, connection strings, or IAM policies:
+
+```yaml
+status:
+  iamPolicy: |
+    {
+      "Effect": "Allow",
+      "Resource": "arn:aws:s3:::${bucket.metadata.name}/*",
+      "Principal": "${serviceAccount.metadata.name}"
+    }
+```
+
+:::tip
+Use explicit `string()` conversions when concatenating non-string values to ensure type compatibility.
+:::
 
 ## Default Status Fields
 
@@ -295,19 +343,22 @@ An array of condition objects tracking the instance's state:
 ```yaml
 status:
   conditions:
-    - type: string # e.g., "Ready", "Progressing"
+    - type: string # e.g., "Ready", "InstanceManaged", "GraphResolved", "ResourcesReady"
       status: string # "True", "False", "Unknown"
       lastTransitionTime: string
+      observedGeneration: integer
       reason: string
       message: string
 ```
 
-Common condition types:
+kro provides a hierarchical condition structure:
 
-- `Ready`: Instance is fully reconciled
-- `Progressing`: Working towards desired state
-- `Degraded`: Operational but not optimal
-- `Error`: Reconciliation error occurred
+- `Ready`: Top-level condition indicating the instance is fully operational
+  - `InstanceManaged`: Instance finalizers and labels are properly set
+  - `GraphResolved`: Runtime graph has been created and resources resolved
+  - `ResourcesReady`: All resources in the graph are created and ready
+
+The `Ready` condition aggregates the state of all sub-conditions and only becomes `True` when all sub-conditions are `True`. Each condition includes an `observedGeneration` field that tracks which generation of the instance the condition reflects.
 
 ### 2. State
 
@@ -315,7 +366,7 @@ A high-level summary of the instance's status:
 
 ```yaml
 status:
-  state: string # Ready, Progressing, Degraded, Unknown, Deleting
+  state: string # ACTIVE, IN_PROGRESS, FAILED, DELETING, ERROR
 ```
 
 :::tip
