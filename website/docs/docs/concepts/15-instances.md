@@ -147,7 +147,12 @@ Every instance includes:
    - `Ready`: Instance is fully operational (top-level condition)
      - Aggregates the state of all sub-conditions
      - Only becomes True when all sub-conditions are True
-     - The primary condition to monitor for instance health
+     - **The primary condition to monitor and wait on for instance health**
+     - Use this condition in automation, CI/CD, and health checks
+
+   :::tip
+   Always use the `Ready` condition to determine instance health. The sub-conditions (`InstanceManaged`, `GraphResolved`, `ResourcesReady`) are provided for debugging purposes and may change in future versions. kro reserves the right to add, remove, or modify sub-conditions without breaking compatibility as long as the `Ready` condition behavior remains stable.
+   :::
 
    Each condition includes:
    - `observedGeneration`: Tracks which generation of the instance this condition reflects
