@@ -137,7 +137,10 @@ correctness and set up the necessary components:
    - Checks that referenced values exist and are of the correct type
    - Confirms resource dependencies form a valid Directed Acyclic Graph(DAG)
      without cycles
-   - Validates all CEL expressions in status fields and conditions
+   - Validates all CEL expressions in status fields and conditions using CEL's native type system
+     - Validates field references exist in the actual resource schemas
+     - Ensures expressions return types compatible with their target fields
+     - Checks type compatibility statically without executing expressions
 
 2. **API Generation**: kro generates and registers a new CRD in your cluster
    based on your schema. For example, if your **ResourceGraphDefinition** defines a
@@ -149,12 +152,14 @@ correctness and set up the necessary components:
    - Integrates seamlessly with kubectl and other Kubernetes tools
 
 3. **Controller Configuration**: kro configures itself to watch for instances of
-   your new API and:
+   your new API and their managed resources:
 
    - Creates all required resources following the dependency order
    - Manages references and value passing between resources
    - Handles the complete lifecycle for create, update, and delete operations
    - Keeps status information up to date based on actual resource states
+   - Automatically detects and reconciles drift in managed resources
+   - Triggers reconciliation when any managed resource changes
 
 For instance, when you create a `WebApplication` ResourceGraphDefinition, kro generates
 the `webapplications.kro.run` CRD. When users create instances of this API, kro
