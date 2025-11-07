@@ -140,7 +140,8 @@ correctness and set up the necessary components:
    - Validates all CEL expressions in status fields and conditions using CEL's native type system
      - Validates field references exist in the actual resource schemas
      - Ensures expressions return types compatible with their target fields
-     - Checks type compatibility statically without executing expressions
+     - Validates that CEL functions called in expressions exist and are used correctly
+     - Checks expression correctness and type compatibility statically without executing expressions
 
 2. **API Generation**: kro generates and registers a new CRD in your cluster
    based on your schema. For example, if your **ResourceGraphDefinition** defines a

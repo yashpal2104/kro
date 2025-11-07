@@ -330,6 +330,14 @@ status:
 
 :::tip
 Use explicit `string()` conversions when concatenating non-string values to ensure type compatibility.
+
+Alternatively, you can use CEL's built-in `format()` function for string formatting:
+```yaml
+status:
+  endpoint: ${"https://%s.%s.svc.cluster.local".format([service.metadata.name, service.metadata.namespace])}
+```
+
+The `${...}${...}` templating syntax is a kro convenience feature that makes common string concatenation patterns more readable.
 :::
 
 ## Default Status Fields
