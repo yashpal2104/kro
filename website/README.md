@@ -50,10 +50,7 @@ If you are using GitHub pages for hosting, this command is a convenient way to b
 
 When a new kro controller version is released, you should also update/release the documentation:
 
-1. **Update `version.json`**  
-    Add the new version to the `version.json` file.
-
-2. **Create a Docusaurus version**  
+1. **Create a Docusaurus version**  
     Remove the `v` prefix from your version (e.g., `v0.1.0` → `0.1.0`):
 
     ```shell
@@ -61,5 +58,5 @@ When a new kro controller version is released, you should also update/release th
     npm run docusaurus docs:version $version_number
     ```
 
-3. **Submit a Pull Request**  
+2. **Submit a Pull Request**  
     Commit your changes and open a PR to publish the new versioned docs.
