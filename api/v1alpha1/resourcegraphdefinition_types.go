@@ -23,10 +23,6 @@ import (
 type AdditionalPrinterColumnPolicy string
 
 const (
-	// DefaultServiceAccountKey is the key to use for the default service account
-	// in the serviceAccounts map.
-	DefaultServiceAccountKey = "*"
-
 	// AdditionalPrinterColumnPolicyReplace specifies that the provided additional
 	// printer columns should completely replace the default columns. If no
 	// AdditionalPrinterColumns are provided or the list is empty, the system
