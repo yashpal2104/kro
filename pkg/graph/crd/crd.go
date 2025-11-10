@@ -121,23 +121,32 @@ func newCRDAdditionalPrinterColumns(
 		return defaultAdditionalPrinterColumns
 	}
 
-	// For backwards compatibility treat an empty policy string as Replace.
+	// For backwards compatibility, treat an empty policy string as Replace.
+	// This handles cases where the policy field is not set (zero value) or explicitly
+	// set to Replace. When Replace policy is used, the user-provided columns completely
+	// replace the defaults, giving users full control over the printer columns.
 	if policy == "" || policy == v1alpha1.AdditionalPrinterColumnPolicyReplace {
 		return userCols
 	}
 
+	// Add policy: merge user columns with defaults
+	// Start with defaults, then override/append user columns
 	merged := make([]extv1.CustomResourceColumnDefinition, len(defaultAdditionalPrinterColumns), len(defaultAdditionalPrinterColumns)+len(userCols))
 	copy(merged, defaultAdditionalPrinterColumns)
 
+	// Build an index by column Name for O(1) lookup
 	index := make(map[string]int, len(merged))
 	for i, c := range merged {
 		index[c.Name] = i
 	}
 
+	// Process user columns: override defaults by Name, or append if new
 	for _, u := range userCols {
 		if pos, ok := index[u.Name]; ok {
+			// Override the default column at this position
 			merged[pos] = u
 		} else {
+			// Append new column not in defaults
 			merged = append(merged, u)
 		}
 	}
