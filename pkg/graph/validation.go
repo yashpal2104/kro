@@ -18,6 +18,8 @@ import (
 	"fmt"
 	"regexp"
 
+	"k8s.io/apimachinery/pkg/util/sets"
+
 	"github.com/kubernetes-sigs/kro/api/v1alpha1"
 )
 
@@ -34,8 +36,19 @@ var (
 	// kubernetesVersionRegex
 	kubernetesVersionRegex = regexp.MustCompile(`^v\d+(?:(?:alpha|beta)\d+)?$`)
 
-	// reservedKeyWords is a list of reserved words in kro.
-	reservedKeyWords = []string{
+	// celReservedSymbols is a list of RESERVED symbols defined in the CEL lexer.
+	// No identifiers are allowed to collide with these symbols.
+	// https://github.com/google/cel-spec/blob/master/doc/langdef.md#syntax
+	celReservedSymbols = sets.NewString(
+		"true", "false", "null", "in",
+		"as", "break", "const", "continue", "else",
+		"for", "function", "if", "import", "let",
+		"loop", "package", "namespace", "return",
+		"var", "void", "while",
+	)
+
+	// kroReservedKeyWords is a list of reserved words in kro.
+	kroReservedKeyWords = sets.NewString(
 		"apiVersion",
 		"context",
 		"dependency",
@@ -68,7 +81,9 @@ var (
 		"variables",
 		"vars",
 		"version",
-	}
+	)
+
+	reservedKeyWords = kroReservedKeyWords.Union(celReservedSymbols)
 )
 
 // isValidResourceID checks if the given id is a valid KRO resource id (loawercase)
@@ -83,7 +98,7 @@ func isValidKindName(name string) bool {
 
 // isKROReservedWord checks if the given word is a reserved word in KRO.
 func isKROReservedWord(word string) bool {
-	for _, w := range reservedKeyWords {
+	for _, w := range reservedKeyWords.List() {
 		if w == word {
 			return true
 		}
