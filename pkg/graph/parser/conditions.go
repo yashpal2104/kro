@@ -1,4 +1,4 @@
-// Copyright 2025 The Kube Resource Orchestrator Authors
+// Copyright 2025 The Kubernetes Authors.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -38,7 +38,9 @@ func ParseConditionExpressions(conditions []string) ([]string, error) {
 		if !ok {
 			return nil, fmt.Errorf("only standalone expressions are allowed")
 		}
-		expressions = append(expressions, strings.Trim(e, "${}"))
+		expr := strings.TrimPrefix(e, "${")
+		expr = strings.TrimSuffix(expr, "}")
+		expressions = append(expressions, expr)
 	}
 
 	return expressions, nil

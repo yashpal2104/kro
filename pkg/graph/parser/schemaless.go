@@ -1,4 +1,4 @@
-// Copyright 2025 The Kube Resource Orchestrator Authors
+// Copyright 2025 The Kubernetes Authors.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,7 +18,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/kro-run/kro/pkg/graph/variable"
+	"github.com/google/cel-go/cel"
+	"github.com/kubernetes-sigs/kro/pkg/graph/variable"
 )
 
 // ParseSchemalessResource extracts CEL expressions without a schema, this is useful
@@ -57,9 +58,11 @@ func parseSchemalessResource(resource interface{}, path string) ([]variable.Fiel
 			return nil, err
 		}
 		if ok {
+			expr := strings.TrimPrefix(field, "${")
+			expr = strings.TrimSuffix(expr, "}")
 			expressionsFields = append(expressionsFields, variable.FieldDescriptor{
-				Expressions:          []string{strings.Trim(field, "${}")},
-				ExpectedTypes:        []string{"any"},
+				Expressions:          []string{expr},
+				ExpectedType:         cel.DynType, // No schema, so we use dynamic type
 				Path:                 path,
 				StandaloneExpression: true,
 			})
@@ -70,9 +73,9 @@ func parseSchemalessResource(resource interface{}, path string) ([]variable.Fiel
 			}
 			if len(expressions) > 0 {
 				expressionsFields = append(expressionsFields, variable.FieldDescriptor{
-					Expressions:   expressions,
-					ExpectedTypes: []string{"any"},
-					Path:          path,
+					Expressions:  expressions,
+					ExpectedType: cel.StringType, // String templates always produce strings
+					Path:         path,
 				})
 			}
 		}
