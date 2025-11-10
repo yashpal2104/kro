@@ -20,17 +20,15 @@ spec:
       name: State
       type: string
     # Default Synced column should remain
-    - description: Whether a ResourceGraphDefinition instance have all it's subresources
+    - description: Whether a ResourceGraphDefinition instance is
         ready
-      jsonPath: .status.conditions[?(@.type=="InstanceSynced")].status
-      name: Synced
-      priority: 0
+      jsonPath: .status.conditions[?(@.type=="Ready")].status
+      name: Ready
       type: string
     # Default Age column should remain
     - description: Age of the resource
       jsonPath: .metadata.creationTimestamp
       name: Age
-      priority: 0
       type: date
     # New REPLICAS column should be appended
     - description: Number of replicas
@@ -48,10 +46,13 @@ spec:
           metadata:
             type: object
           spec:
+            default: {}
             properties:
               name:
+                default: test
                 type: string
               replicas:
+                default: 1
                 type: integer
             type: object
           status:
@@ -81,20 +82,3 @@ spec:
     storage: true
     subresources:
       status: {}
-status:
-  acceptedNames:
-    kind: TestAddPrinterColumns
-    listKind: TestAddPrinterColumnsList
-    plural: testaddprintercolumns
-    singular: testaddprintercolumns
-  conditions:
-  - message: no conflicts found
-    reason: NoConflicts
-    status: "True"
-    type: NamesAccepted
-  - message: the initial names have been accepted
-    reason: InitialNamesAccepted
-    status: "True"
-    type: Established
-  storedVersions:
-  - v1alpha1

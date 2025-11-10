@@ -126,7 +126,7 @@ spec:
                       columns via AdditionalPrinterColumns are applied to the generated CRD.
 
                       - "Replace": uses the provided columns as is; if no or empty AdditionalPrinterColumns are provided, fallback to the default columns.
-                      - "Add": merge the provided columns with the defaults, with user
+                      - "Add": appends the provided columns to the defaults, with user
                         definitions overriding defaults when they share a identifying key
                         (Name preferred, fallback to JSONPath).
                     enum:

@@ -18,4 +18,4 @@ spec:
           name: ${schema.metadata.name}-config
         data:
           name: ${schema.spec.name}
-          replicas: ${schema.spec.replicas}
+          replicas: ${string(schema.spec.replicas)}

@@ -34,10 +34,13 @@ spec:
           metadata:
             type: object
           spec:
+            default: {}
             properties:
               name:
+                default: test
                 type: string
               replicas:
+                default: 1
                 type: integer
             type: object
           status:
@@ -67,20 +70,3 @@ spec:
     storage: true
     subresources:
       status: {}
-status:
-  acceptedNames:
-    kind: TestReplacePrinterColumns
-    listKind: TestReplacePrinterColumnsList
-    plural: testreplaceprintercolumns
-    singular: testreplaceprintercolumns
-  conditions:
-  - message: no conflicts found
-    reason: NoConflicts
-    status: "True"
-    type: NamesAccepted
-  - message: the initial names have been accepted
-    reason: InitialNamesAccepted
-    status: "True"
-    type: Established
-  storedVersions:
-  - v1alpha1

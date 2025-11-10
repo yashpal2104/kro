@@ -84,11 +84,10 @@ func newCRDSchema(spec, status extv1.JSONSchemaProps, statusFieldsOverride bool)
 	// if statusFieldsOverride is true, we will override the status fields with the default ones
 	// TODO(a-hilaly): Allow users to override the default status fields.
 	if statusFieldsOverride {
-		// Use the same key casing as the tests/defaults: "State" (capital S)
-		// so that existing user-provided 'State' will not be duplicated with
-		// a lowercase 'state' key.
-		if _, ok := status.Properties["State"]; !ok {
-			status.Properties["State"] = defaultStateType
+		// Use lowercase 'state' to match the JSONPath in defaultAdditionalPrinterColumns
+		// (.status.state)
+		if _, ok := status.Properties["state"]; !ok {
+			status.Properties["state"] = defaultStateType
 		}
 		if _, ok := status.Properties["conditions"]; !ok {
 			status.Properties["conditions"] = defaultConditionsType

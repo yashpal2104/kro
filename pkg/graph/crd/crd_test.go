@@ -24,7 +24,11 @@ import (
 	"github.com/kubernetes-sigs/kro/api/v1alpha1"
 )
 
-const state string = "State"
+// stateProperty is the lowercase property key in the CRD schema
+const stateProperty string = "state"
+
+// stateColumn is the uppercase display name for the printer column
+const stateColumn string = "State"
 
 func TestSynthesizeCRD(t *testing.T) {
 	tests := []struct {
@@ -246,7 +250,7 @@ func TestNewCRDSchema(t *testing.T) {
 			name: "with existing status properties and override enabled",
 			spec: extv1.JSONSchemaProps{Type: "object"},
 			status: extv1.JSONSchemaProps{Type: "object", Properties: map[string]extv1.JSONSchemaProps{
-				state: {
+				stateProperty: {
 					Type:        "string",
 					Description: "Custom state filed",
 				},
@@ -277,7 +281,7 @@ func TestNewCRDSchema(t *testing.T) {
 			require.NotNil(t, statusProps.Properties)
 
 			if tt.expectedStateField {
-				assert.Contains(t, statusProps.Properties, state)
+				assert.Contains(t, statusProps.Properties, stateProperty)
 				assert.Equal(t, defaultConditionsType, statusProps.Properties["conditions"])
 			}
 			if tt.status.Properties != nil {
@@ -332,7 +336,7 @@ func TestNewCRDAdditionalPrinterColumns(t *testing.T) {
 			name:   "Add policy overrides default by name",
 			policy: v1alpha1.AdditionalPrinterColumnPolicyAdd,
 			userCols: []extv1.CustomResourceColumnDefinition{
-				{Name: state, JSONPath: ".status.customState", Type: "string"}, // override default State
+				{Name: stateColumn, JSONPath: ".status.customState", Type: "string"}, // override default State
 			},
 			want: func() []extv1.CustomResourceColumnDefinition {
 				// Create expected result with State overridden
@@ -340,8 +344,8 @@ func TestNewCRDAdditionalPrinterColumns(t *testing.T) {
 				copy(result, defaultAdditionalPrinterColumns)
 				// Find and override State column
 				for i, col := range result {
-					if col.Name == state {
-						result[i] = extv1.CustomResourceColumnDefinition{Name: state, JSONPath: ".status.customState", Type: "string"}
+					if col.Name == stateColumn {
+						result[i] = extv1.CustomResourceColumnDefinition{Name: stateColumn, JSONPath: ".status.customState", Type: "string"}
 						break
 					}
 				}
@@ -361,16 +365,16 @@ func TestNewCRDAdditionalPrinterColumns(t *testing.T) {
 			name:   "Add policy with mixed override and append",
 			policy: v1alpha1.AdditionalPrinterColumnPolicyAdd,
 			userCols: []extv1.CustomResourceColumnDefinition{
-				{Name: state, JSONPath: ".status.customState", Type: "string"}, // override
-				{Name: "CUSTOM", JSONPath: ".spec.custom", Type: "string"},     // append
+				{Name: stateColumn, JSONPath: ".status.customState", Type: "string"}, // override
+				{Name: "CUSTOM", JSONPath: ".spec.custom", Type: "string"},           // append
 			},
 			want: func() []extv1.CustomResourceColumnDefinition {
 				result := make([]extv1.CustomResourceColumnDefinition, len(defaultAdditionalPrinterColumns))
 				copy(result, defaultAdditionalPrinterColumns)
 				// Find and override State column
 				for i, col := range result {
-					if col.Name == state {
-						result[i] = extv1.CustomResourceColumnDefinition{Name: state, JSONPath: ".status.customState", Type: "string"}
+					if col.Name == stateColumn {
+						result[i] = extv1.CustomResourceColumnDefinition{Name: stateColumn, JSONPath: ".status.customState", Type: "string"}
 						break
 					}
 				}
@@ -399,7 +403,7 @@ func TestSynthesizeCRDWithPolicy(t *testing.T) {
 	status := extv1.JSONSchemaProps{
 		Type: "object",
 		Properties: map[string]extv1.JSONSchemaProps{
-			state: {Type: "string"},
+			stateProperty: {Type: "string"},
 		},
 	}
 
@@ -490,7 +494,7 @@ func TestAdditionalPrinterColumnPolicyBackwardsCompatibility(t *testing.T) {
 func TestAdditionalPrinterColumnPolicyMergeOrder(t *testing.T) {
 	userCols := []extv1.CustomResourceColumnDefinition{
 		{Name: "First", JSONPath: ".spec.first", Type: "string"},
-		{Name: state, JSONPath: ".status.overriddenState", Type: "string"}, // Override default
+		{Name: stateColumn, JSONPath: ".status.overriddenState", Type: "string"}, // Override default
 		{Name: "Second", JSONPath: ".spec.second", Type: "integer"},
 	}
 
@@ -499,7 +503,7 @@ func TestAdditionalPrinterColumnPolicyMergeOrder(t *testing.T) {
 	// Check that State was overridden in place
 	stateFound := false
 	for _, col := range result {
-		if col.Name == state {
+		if col.Name == stateColumn {
 			stateFound = true
 			assert.Equal(t, ".status.overriddenState", col.JSONPath, "State column should be overridden")
 			break
