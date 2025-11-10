@@ -120,6 +120,8 @@ func DefaultEnvironment(options ...EnvOption) (*cel.Env, error) {
 
 		if len(declTypes) > 0 {
 			baseProvider := apiservercel.NewDeclTypeProvider(declTypes...)
+			// Enable recognition of CEL reserved keywords as field names
+			baseProvider.SetRecognizeKeywordAsFieldName(true)
 
 			registry := types.NewEmptyRegistry()
 			wrappedProvider, err := baseProvider.WithTypeProvider(registry)
@@ -175,5 +177,9 @@ func CreateDeclTypeProvider(schemas map[string]*spec.Schema) *apiservercel.DeclT
 		return nil
 	}
 
-	return apiservercel.NewDeclTypeProvider(declTypes...)
+	provider := apiservercel.NewDeclTypeProvider(declTypes...)
+	// Enable recognition of CEL reserved keywords as field names.
+	// This allows users to write "schema.metadata.namespace" instead of "schema.metadata.__namespace__"
+	provider.SetRecognizeKeywordAsFieldName(true)
+	return provider
 }
