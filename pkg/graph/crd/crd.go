@@ -103,8 +103,24 @@ func newCRDSchema(spec, status extv1.JSONSchemaProps, statusFieldsOverride bool)
 	}
 }
 
-func newCRDAdditionalPrinterColumns(additionalPrinterColumns []extv1.CustomResourceColumnDefinition) []extv1.CustomResourceColumnDefinition {
-	if len(additionalPrinterColumns) == 0 {
+// newCRDAdditionalPrinterColumns determines the final set of printer columns to use
+// based on the policy and user-provided columns.
+//
+// If no user columns are provided, it always returns the default columns.
+//
+// Policy behaviors:
+//   - Replace (or empty string): User columns completely replace defaults.
+//     This gives users full control but requires them to redefine all columns.
+//   - Add: User columns are merged with defaults. User columns override defaults
+//     when they share the same Name. New columns are appended to the end.
+//     This allows users to customize specific columns while keeping others.
+//
+// Returns the final slice of printer columns to use in the CRD.
+func newCRDAdditionalPrinterColumns(
+	policy v1alpha1.AdditionalPrinterColumnPolicy,
+	userCols []extv1.CustomResourceColumnDefinition,
+) []extv1.CustomResourceColumnDefinition {
+	if len(userCols) == 0 {
 		return defaultAdditionalPrinterColumns
 	}
 

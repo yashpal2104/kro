@@ -20,9 +20,17 @@ import (
 )
 
 const (
-	// DefaultServiceAccountKey is the key to use for the default service account
-	// in the serviceAccounts map.
-	DefaultServiceAccountKey = "*"
+	// AdditionalPrinterColumnPolicyReplace specifies that the provided additional
+	// printer columns should completely replace the default columns. If no
+	// AdditionalPrinterColumns are provided or the list is empty, the system
+	// will fall back to using the default columns.
+	AdditionalPrinterColumnPolicyReplace AdditionalPrinterColumnPolicy = "Replace"
+
+	// AdditionalPrinterColumnPolicyAdd specifies that the provided additional
+	// printer columns should be appended to the default columns. When there are
+	// conflicts (columns with the same Name or JSONPath), the user-provided
+	// columns take precedence over the defaults.
+	AdditionalPrinterColumnPolicyAdd AdditionalPrinterColumnPolicy = "Add"
 )
 
 // ResourceGraphDefinitionSpec defines the desired state of ResourceGraphDefinition
