@@ -229,7 +229,7 @@ func (igr *instanceGraphReconciler) reconcileInstance(ctx context.Context) error
 
 		// ExternalRefs are read-only - fetch them directly instead of adding to applyset
 		if igr.runtime.ResourceDescriptor(resourceID).IsExternalRef() {
-			clusterObj, err := igr.readExternalRef(ctx, resource)
+			clusterObj, err := igr.readExternalRef(ctx, resourceID, resource)
 			if err != nil {
 				resourceState.State = ResourceStateError
 				resourceState.Err = fmt.Errorf("failed to read external ref: %w", err)
@@ -570,7 +570,7 @@ func (igr *instanceGraphReconciler) delayedRequeue(err error) error {
 
 // readExternalRef fetches an external reference from the cluster.
 // External references are resources that exist outside of this instance's control.
-func (igr *instanceGraphReconciler) readExternalRef(ctx context.Context, resource *unstructured.Unstructured) (*unstructured.Unstructured, error) {
+func (igr *instanceGraphReconciler) readExternalRef(ctx context.Context, resourceID string, resource *unstructured.Unstructured) (*unstructured.Unstructured, error) {
 	gvk := resource.GroupVersionKind()
 	restMapping, err := igr.restMapper.RESTMapping(gvk.GroupKind(), gvk.Version)
 	if err != nil {
@@ -579,10 +579,7 @@ func (igr *instanceGraphReconciler) readExternalRef(ctx context.Context, resourc
 
 	var dynResource dynamic.ResourceInterface
 	if restMapping.Scope.Name() == meta.RESTScopeNameNamespace {
-		namespace := resource.GetNamespace()
-		if namespace == "" {
-			namespace = metav1.NamespaceDefault
-		}
+		namespace := igr.getResourceNamespace(resourceID)
 		dynResource = igr.client.Resource(restMapping.Resource).Namespace(namespace)
 	} else {
 		dynResource = igr.client.Resource(restMapping.Resource)
