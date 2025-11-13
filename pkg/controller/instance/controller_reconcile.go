@@ -98,6 +98,8 @@ type instanceGraphReconciler struct {
 // It manages the full lifecycle of the instance including creation, updates,
 // and deletion.
 func (igr *instanceGraphReconciler) reconcile(ctx context.Context) error {
+	igr.log.V(2).Info("reconciling instance")
+
 	igr.state = newInstanceState()
 
 	// Create runtime - if this fails, the defer in Controller.Reconcile handles status
@@ -231,7 +233,7 @@ func (igr *instanceGraphReconciler) reconcileInstance(ctx context.Context) error
 			if err != nil {
 				resourceState.State = ResourceStateError
 				resourceState.Err = fmt.Errorf("failed to read external ref: %w", err)
-				return igr.delayedRequeue(resourceState.Err)
+				break
 			}
 			igr.runtime.SetResource(resourceID, clusterObj)
 			igr.updateResourceReadiness(resourceID)
@@ -291,7 +293,7 @@ func (igr *instanceGraphReconciler) reconcileInstance(ctx context.Context) error
 
 	if err := result.Errors(); err != nil {
 		mark.ResourcesNotReady("there was an error while reconciling resources in the apply set: %v", err)
-		return fmt.Errorf("failed to apply/prune resources: %w", err)
+		return igr.delayedRequeue(fmt.Errorf("failed to apply/prune resources: %w", err))
 	}
 
 	if unresolvedResourceID != "" {

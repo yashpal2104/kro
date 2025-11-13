@@ -49,12 +49,6 @@ spec:
     - apply:
         file: configmap.yaml
       description: Apply External Reference ConfigMap
-
-    # TODO(jakobmoellerdev): remove once we support external reference watching
-    - apply:
-        file: instance-propagate.yaml
-      description: External References are not watched so we need to propagate a change manually
-
     - assert:
         file: instance-assert.yaml
       description: Verify Instance becomes Ready after Reference is fulfilled
